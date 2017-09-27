@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="seegie-service:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/seegie_service_jar</output-path>
+    <root id="archive" name="seegie-service.jar">
+      <element id="module-output" name="seegie-service" />
+    </root>
+  </artifact>
+</component>

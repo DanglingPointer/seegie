@@ -16,7 +16,7 @@ public class SerialPort implements AutoCloseable
     public static String[] getAllNames() {
         return Native.getAllPorts();
     }
-    private static Map<String, SerialPort> s_handlers = new HashMap<>();
+    private static final Map<String, SerialPort> s_handlers = new HashMap<>();
 
     //------------------------------------------------------------------------------------------------------------------
     private final long    m_ptr;
