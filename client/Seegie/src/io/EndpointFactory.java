@@ -24,13 +24,13 @@
 
 package io;
 
-public abstract class EndpointFactory
+public interface EndpointFactory
 {
-    public abstract DataInEndpoint[] getDataInEndpoints();
+    DataInEndpoint[] getDataInEndpoints();
 
-    public abstract CmdInEndpoint[] getCmdInEndpoints();
+    CmdInEndpoint[] getCmdInEndpoints();
 
-    public abstract DataOutEndpoint[] getDataOutEndpoints();
+    DataOutEndpoint[] getDataOutEndpoints();
 
-    public abstract CmdOutEndpoint[] getCmdOutEndpoints();
+    CmdOutEndpoint[] getCmdOutEndpoints();
 }

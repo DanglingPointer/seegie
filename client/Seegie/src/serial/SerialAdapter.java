@@ -24,6 +24,36 @@
 
 package serial;
 
-public class SerialPort
+import com.fazecast.jSerialComm.SerialPort;
+import io.CmdOutEndpoint;
+import io.DataInEndpoint;
+import models.BCICmd;
+
+public class SerialAdapter implements DataInEndpoint, CmdOutEndpoint
 {
+    private final SerialPort m_port;
+
+    SerialAdapter(String portName) {
+        m_port = SerialPort.getCommPort(portName);
+    }
+    @Override
+    public void sendCmd(BCICmd cmd) {
+
+    }
+    @Override
+    public void addListener(Listener listener) {
+
+    }
+    @Override
+    public void unregisterListeners() {
+
+    }
+    @Override
+    public void open() {
+
+    }
+    @Override
+    public void closed() {
+
+    }
 }

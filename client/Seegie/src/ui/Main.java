@@ -46,33 +46,5 @@ public class Main extends Application
 
     public static void main(String[] args) {
         launch(args);
-
-        // --begin temp--
-        try {
-            WebSocketClient client = new WebSocketClient(new URI("ws://www.blablabla.com"))
-            {
-                @Override
-                public void onOpen(ServerHandshake handshakedata) {
-
-                }
-                @Override
-                public void onMessage(String message) {
-
-                }
-                @Override
-                public void onClose(int code, String reason, boolean remote) {
-
-                }
-                @Override
-                public void onError(Exception ex) {
-
-                }
-            };
-            client.connect();
-        }
-        catch (Exception e) {
-
-        }
-        // --end temp--
     }
 }

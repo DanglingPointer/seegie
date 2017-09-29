@@ -24,6 +24,9 @@
 
 package io;
 
+import models.BCICmd;
+
 public interface CmdOutEndpoint extends OutEndpoint
 {
+    void sendCmd(BCICmd cmd);
 }

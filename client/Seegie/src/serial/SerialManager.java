@@ -24,6 +24,28 @@
 
 package serial;
 
+import com.fazecast.jSerialComm.SerialPort;
+
 public class SerialManager
 {
+    private static SerialManager s_instance = new SerialManager();
+    public static SerialManager getInstance() {
+        return s_instance;
+    }
+
+    private SerialPort[] m_ports;
+
+    private SerialManager() {
+        m_ports = SerialPort.getCommPorts();
+    }
+    public String[] getPorts() {
+        String[] names = new String[m_ports.length];
+        for (int i = 0; i < m_ports.length; ++i) {
+            names[i] = m_ports[i].getDescriptivePortName();
+        }
+        return names;
+    }
+    public SerialAdapter getAdapter(String portName) {
+        return new SerialAdapter(portName);
+    }
 }

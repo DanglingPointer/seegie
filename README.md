@@ -1,4 +1,4 @@
-## Sanntidsavlesing og distribuering av OpenBCI EEG-signaler
+﻿## Sanntidsavlesing og distribuering av OpenBCI EEG-signaler
 #### (SEEGIE – Synchronized EEG Information Exchange)
 
 OpenBCI (open-source brain-computer interface) er et grensesnitt som blant annet inkluderer maskinvare for avlesning av elektriske hjernesignaler (EEG). Et spesielt designet kretskort mottar de avleste signalene. Disse kan videre sendes til en datamaskin ved å bruke seriell kommunikasjon eller bluetooth. Felles for disse kommunikasjonstypene er kort rekkevidde, noe som i praksis betyr at kun én datamaskin kan motta data samtidig, og denne datamaskinen må befinne seg like i nærheten av EEG-settet.
@@ -22,3 +22,9 @@ Målet med prosjektet er å lage en pålitelig og effektiv kryssplattform progra
     - TODO Uke 45
 7. Dokumentasjon: 
     - TODO Uke 46
+
+
+http://docs.openbci.com/Hardware/03-Cyton_Data_Format
+
+http://docs.openbci.com/OpenBCI%20Software/04-OpenBCI_Cyton_SDK
+

@@ -26,4 +26,17 @@ package web;
 
 public class NetworkManager
 {
+    private static NetworkManager s_instance = new NetworkManager();
+    public static NetworkManager getInstance() {
+        return s_instance;
+    }
+
+    // TODO: 29.09.2017 private variables go here
+
+    private NetworkManager() {
+        // TODO: 29.09.2017 initialize private variables
+    }
+    public NetworkAdapter getAdapter(String link) {
+        return new NetworkAdapter(link);
+    }
 }

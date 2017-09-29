@@ -24,6 +24,13 @@
 
 package io;
 
+import models.BCICmd;
+
 public interface CmdInEndpoint extends InEndpoint
 {
+    interface Listener
+    {
+        void onCmdReceived(BCICmd cmd);
+    }
+    void addListener(Listener listener);
 }

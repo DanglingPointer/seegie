@@ -24,6 +24,9 @@
 
 package io;
 
+import models.EEGData;
+
 public interface DataOutEndpoint extends OutEndpoint
 {
+    void sendData(EEGData data);
 }

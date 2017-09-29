@@ -26,4 +26,6 @@ package io;
 
 public interface Endpoint
 {
+    void open();
+    void closed();
 }

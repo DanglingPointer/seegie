@@ -24,6 +24,13 @@
 
 package io;
 
+import models.EEGData;
+
 public interface DataInEndpoint extends InEndpoint
 {
+    interface Listener
+    {
+        void onDataReceived(EEGData data);
+    }
+    void addListener(Listener listener);
 }

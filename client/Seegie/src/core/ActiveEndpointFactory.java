@@ -29,39 +29,60 @@ import io.CmdOutEndpoint;
 import io.DataInEndpoint;
 import io.DataOutEndpoint;
 import io.EndpointFactory;
+import serial.SerialAdapter;
+import serial.SerialManager;
+import web.NetworkAdapter;
+import web.NetworkManager;
 
-public class ActiveEndpointFactory extends EndpointFactory
+public class ActiveEndpointFactory implements EndpointFactory
 {
+    private final String m_serialName;
+    private final String m_wsLink;
+
+    public ActiveEndpointFactory(String serialPortName, String websockLink) {
+        m_serialName = serialPortName;
+        m_wsLink = websockLink;
+    }
     /**
      * Serial port
+     *
      * @return
      */
     @Override
     public DataInEndpoint[] getDataInEndpoints() {
-        return new DataInEndpoint[0];
+        SerialAdapter serial = SerialManager.getInstance().getAdapter(m_serialName);
+        return new DataInEndpoint[]{ serial };
     }
     /**
      * Websocket, GUI
+     *
      * @return
      */
     @Override
     public CmdInEndpoint[] getCmdInEndpoints() {
-        return new CmdInEndpoint[0];
+        NetworkAdapter net = NetworkManager.getInstance().getAdapter(m_wsLink);
+        // TODO: 29.09.2017 obtain GUI adapter
+        return new CmdInEndpoint[]{ net, null };
     }
     /**
      * Websocket, GUI
+     *
      * @return
      */
     @Override
     public DataOutEndpoint[] getDataOutEndpoints() {
-        return new DataOutEndpoint[0];
+        NetworkAdapter net = NetworkManager.getInstance().getAdapter(m_wsLink);
+        // TODO: 29.09.2017 obtain GUI adapter
+        return new DataOutEndpoint[]{ net, null };
     }
     /**
      * Serial port
+     *
      * @return
      */
     @Override
     public CmdOutEndpoint[] getCmdOutEndpoints() {
-        return new CmdOutEndpoint[0];
+        SerialAdapter serial = SerialManager.getInstance().getAdapter(m_serialName);
+        return new CmdOutEndpoint[]{ serial };
     }
 }

@@ -29,39 +29,54 @@ import io.CmdOutEndpoint;
 import io.DataInEndpoint;
 import io.DataOutEndpoint;
 import io.EndpointFactory;
+import web.NetworkAdapter;
+import web.NetworkManager;
 
-public class PassiveEndpointFactory extends EndpointFactory
+public class PassiveEndpointFactory implements EndpointFactory
 {
+    private final String m_wsLink;
+
+    public PassiveEndpointFactory(String websockLink) {
+        m_wsLink = websockLink;
+    }
     /**
      * Websocket
+     *
      * @return
      */
     @Override
     public DataInEndpoint[] getDataInEndpoints() {
-        return new DataInEndpoint[0];
+        NetworkAdapter net = NetworkManager.getInstance().getAdapter(m_wsLink);
+        return new DataInEndpoint[]{ net };
     }
     /**
      * GUI
+     *
      * @return
      */
     @Override
     public CmdInEndpoint[] getCmdInEndpoints() {
+        // TODO: 29.09.2017 obtain GUI adapter
         return new CmdInEndpoint[0];
     }
     /**
      * GUI
+     *
      * @return
      */
     @Override
     public DataOutEndpoint[] getDataOutEndpoints() {
+        // TODO: 29.09.2017 obtain GUI adapter
         return new DataOutEndpoint[0];
     }
     /**
      * Websocket
+     *
      * @return
      */
     @Override
     public CmdOutEndpoint[] getCmdOutEndpoints() {
-        return new CmdOutEndpoint[0];
+        NetworkAdapter net = NetworkManager.getInstance().getAdapter(m_wsLink);
+        return new CmdOutEndpoint[]{ net };
     }
 }

@@ -26,4 +26,5 @@ package io;
 
 public interface InEndpoint extends Endpoint
 {
+    void unregisterListeners();
 }

@@ -35,7 +35,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-public class Controller
+public class IOBroker
 {
     private final Set<InEndpoint>  m_inEndpts     = new HashSet<>();
     private final Set<OutEndpoint> m_outEndpoints = new HashSet<>();
