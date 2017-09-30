@@ -28,47 +28,32 @@ import io.CmdInEndpoint;
 import io.CmdOutEndpoint;
 import io.DataInEndpoint;
 import io.DataOutEndpoint;
+import java_websocket.handshake.ServerHandshake;
 import models.BCICmd;
 import models.EEGData;
-import web.java_websocket.client.WebSocketClient;
-import web.java_websocket.handshake.ServerHandshake;
-
-import java.net.URI;
 
 public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEndpoint, CmdOutEndpoint
 {
-    private final WebSocketClient m_client;
+    private final WebSocketWrapper m_socket;
 
-    NetworkAdapter(String wsUrl) {
-        try {
-            URI link = new URI(wsUrl);
-            m_client = new WebSocketClient(link)
-            {
-                @Override
-                public void onOpen(ServerHandshake handshakedata) {
-
-                }
-                @Override
-                public void onMessage(String message) {
-
-                }
-                @Override
-                public void onClose(int code, String reason, boolean remote) {
-
-                }
-                @Override
-                public void onError(Exception ex) {
-
-                }
-            };
-        }
-        catch (Exception e) {
-            throw new IllegalArgumentException(e.toString());
-        }
+    NetworkAdapter(WebSocketWrapper websocket) {
+        m_socket = websocket;
     }
     @Override
     public void addListener(CmdInEndpoint.Listener listener) {
-
+        m_socket.addListener(new WebSocketWrapper.Listener()
+        {
+            @Override
+            public void onOpened(ServerHandshake handshake) {}
+            @Override
+            public void onMessageReceived(String message) {
+                listener.onCmdReceived(new BCICmd(message)); // temp
+            }
+            @Override
+            public void onClosed(int code, String reason, boolean remote) {}
+            @Override
+            public void onErrorOccurred(Exception ex) {}
+        });
     }
     @Override
     public void sendCmd(BCICmd cmd) {
@@ -76,7 +61,19 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     }
     @Override
     public void addListener(DataInEndpoint.Listener listener) {
-
+        m_socket.addListener(new WebSocketWrapper.Listener()
+        {
+            @Override
+            public void onOpened(ServerHandshake handshake) {}
+            @Override
+            public void onMessageReceived(String message) {
+                listener.onDataReceived(new EEGData(message)); // temp
+            }
+            @Override
+            public void onClosed(int code, String reason, boolean remote) {}
+            @Override
+            public void onErrorOccurred(Exception ex) {}
+        });
     }
     @Override
     public void sendData(EEGData data) {
@@ -84,14 +81,14 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     }
     @Override
     public void unregisterListeners() {
-
+        m_socket.removeAllListeners();
     }
     @Override
     public void open() {
-
+        // TODO: 29.09.2017 open only if not already opened
     }
     @Override
-    public void closed() {
-
+    public void close() {
+        // TODO: 29.09.2017 close only if not already closed
     }
 }

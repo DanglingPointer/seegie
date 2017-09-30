@@ -24,6 +24,29 @@
 
 package models;
 
-public class BCICmd
+class BCICmd
 {
+    public enum SingleLetterCmd
+    {
+        START('b'), STOP('s'), RESET('v'),
+        CHAN1_OFF('1'), CHAN2_OFF('2'), CHAN3_OFF('3'), CHAN4_OFF('4'), CHAN5_OFF('5'), CHAN6_OFF('6'), CHAN7_OFF('7'), CHAN8_OFF('8'),
+        CHAN1_ON('!'), CHAN2_ON('@'), CHAN3_ON('#'), CHAN4_ON('$'), CHAN5_ON('%'), CHAN6_ON('^'), CHAN7_ON('&'), CHAN8_ON('*'),
+        TEST_GND('0'), TEST_1AMP_SLOW('-'), TEST_1AMP_FAST('='), TEST_DC('p'), TEST_2AMP_SLOW('['), TEST_2AMP_FAST(']');
+
+        private byte m_symbol;
+        SingleLetterCmd(char cmd) {
+            m_symbol = (byte)cmd;
+        }
+        public byte getByte() {
+            return m_symbol;
+        }
+    }
+
+    public BCICmd(String cmd) {
+        // temp
+    }
+    public byte[] toByteArray() {
+        // TODO: 30.09.2017
+        return new byte[0];
+    }
 }

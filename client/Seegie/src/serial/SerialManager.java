@@ -41,11 +41,15 @@ public class SerialManager
     public String[] getPorts() {
         String[] names = new String[m_ports.length];
         for (int i = 0; i < m_ports.length; ++i) {
-            names[i] = m_ports[i].getDescriptivePortName();
+            names[i] = m_ports[i].getSystemPortName();
         }
         return names;
     }
     public SerialAdapter getAdapter(String portName) {
-        return new SerialAdapter(portName);
+        for (SerialPort port : m_ports) {
+            if (port.getSystemPortName().equals(portName))
+                return new SerialAdapter(port);
+        }
+        return null;
     }
 }

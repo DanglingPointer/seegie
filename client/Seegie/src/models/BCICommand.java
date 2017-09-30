@@ -22,39 +22,15 @@
  * SOFTWARE.
  */
 
-package web;
+package models;
 
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-
-public class NetworkManager
+public interface BCICommand
 {
-    private static NetworkManager s_instance = new NetworkManager();
-    public static NetworkManager getInstance() {
-        return s_instance;
-    }
+    byte[] toByteArray();
 
-    private final Map<String, WebSocketWrapper> m_sockets;
-
-    private NetworkManager() {
-        m_sockets = new HashMap<>();
+    interface Builder
+    {
+        BCICommand build();
     }
-    public NetworkAdapter getAdapter(String wsLink) {
-        WebSocketWrapper socket = null;
-        if (m_sockets.containsKey(wsLink)) {
-            socket = m_sockets.get(wsLink);
-        }
-        else {
-            try {
-                URI link = new URI(wsLink);
-                socket = new WebSocketWrapper(link);
-                m_sockets.put(wsLink, socket);
-            }
-            catch (Exception e) {
-                throw new IllegalArgumentException(e.toString());
-            }
-        }
-        return new NetworkAdapter(socket);
-    }
+    // implementations: MiscBuilder, ChanSettingsBuilder, LeadoffImpedanceBuilder, ChanCommandsBuilder (on/off channels) etc???
 }

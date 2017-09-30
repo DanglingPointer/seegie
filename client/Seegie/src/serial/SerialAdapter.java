@@ -33,15 +33,15 @@ public class SerialAdapter implements DataInEndpoint, CmdOutEndpoint
 {
     private final SerialPort m_port;
 
-    SerialAdapter(String portName) {
-        m_port = SerialPort.getCommPort(portName);
+    SerialAdapter(SerialPort port) {
+        m_port = port;
     }
     @Override
     public void sendCmd(BCICmd cmd) {
 
     }
     @Override
-    public void addListener(Listener listener) {
+    public void addListener(DataInEndpoint.Listener listener) {
 
     }
     @Override
@@ -53,7 +53,7 @@ public class SerialAdapter implements DataInEndpoint, CmdOutEndpoint
 
     }
     @Override
-    public void closed() {
+    public void close() {
 
     }
 }

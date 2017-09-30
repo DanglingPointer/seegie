@@ -37,7 +37,7 @@ import java.util.Set;
 
 public class IOBroker
 {
-    private final Set<InEndpoint>  m_inEndpts     = new HashSet<>();
+    private final Set<InEndpoint>  m_inEndpoints  = new HashSet<>();
     private final Set<OutEndpoint> m_outEndpoints = new HashSet<>();
 
     public void registerEndpoint(DataInEndpoint ep) {

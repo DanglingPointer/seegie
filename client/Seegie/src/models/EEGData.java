@@ -26,4 +26,7 @@ package models;
 
 public class EEGData
 {
+    public EEGData(String data) {
+        // temp
+    }
 }

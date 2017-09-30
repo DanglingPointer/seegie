@@ -24,15 +24,14 @@
 
 package ui;
 
+import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import web.java_websocket.client.WebSocketClient;
-import web.java_websocket.handshake.ServerHandshake;
-
-import java.net.URI;
 
 public class Main extends Application
 {
@@ -45,6 +44,48 @@ public class Main extends Application
     }
 
     public static void main(String[] args) {
+
+//        try {
+//            SerialPort[] ports = SerialPort.getCommPorts();
+//            SerialPort com1 = ports[0];
+//            SerialPort com2 = ports[1];
+//
+//            com1.openPort();
+//            System.out.println("COM1 open: " + com1.isOpen());
+//            com2.openPort();
+//            System.out.println("COM2 open: " + com2.isOpen());
+//            com2.addDataListener(new SerialPortDataListener()
+//            {
+//                @Override
+//                public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_AVAILABLE; }
+//                @Override
+//                public void serialEvent(SerialPortEvent event)
+//                {
+//                    System.out.println("Serial event triggered");
+//                    if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
+//                        return;
+//                    byte[] newData = new byte[com2.bytesAvailable()];
+//                    int numRead = com2.readBytes(newData, newData.length);
+//                    System.out.println("Read " + numRead + " bytes.");
+//                    for (byte b : newData) {
+//                        System.out.print(b);
+//                    }
+//                }
+//            });
+//
+//            com1.writeBytes(new byte[]{ 0, 1, 2, 3, 4, 5 }, 6);
+//
+//            com1.closePort();
+//            com2.closePort();
+//
+//            System.out.println("\nCOM1 open: " + com1.isOpen());
+//            System.out.println("COM2 open: " + com2.isOpen());
+//        }
+//        catch (Exception e) {
+//            System.out.println(e.toString());
+//            e.printStackTrace();
+//        }
+
         launch(args);
     }
 }
