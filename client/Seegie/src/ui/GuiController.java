@@ -17,14 +17,35 @@
 package ui;
 
 import javafx.fxml.Initializable;
+import models.BCICommand;
+import models.DataUnitsAdapter;
 
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class Controller implements Initializable
+public class GuiController implements Initializable
 {
+    public interface Listener
+    {
+        void onCommandCalled(BCICommand cmd);
+    }
+
+    private Listener m_listener; // NB! Remember nullcheck before calling methods on it!
+
+    public void setListener(Listener listener) {
+        m_listener = listener;
+    }
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
+    }
+    public void updateData(DataUnitsAdapter data) {
+
+    }
+    public void clearData() {
+
+    }
+    public void showInfo(String info) {
 
     }
 }

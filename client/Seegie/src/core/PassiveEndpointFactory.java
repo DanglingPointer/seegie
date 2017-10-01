@@ -33,7 +33,6 @@ public class PassiveEndpointFactory implements EndpointFactory
     }
     /**
      * Websocket
-     *
      * @return
      */
     @Override
@@ -43,7 +42,6 @@ public class PassiveEndpointFactory implements EndpointFactory
     }
     /**
      * GUI
-     *
      * @return
      */
     @Override
@@ -53,7 +51,6 @@ public class PassiveEndpointFactory implements EndpointFactory
     }
     /**
      * GUI
-     *
      * @return
      */
     @Override
@@ -63,7 +60,6 @@ public class PassiveEndpointFactory implements EndpointFactory
     }
     /**
      * Websocket
-     *
      * @return
      */
     @Override

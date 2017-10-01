@@ -37,7 +37,6 @@ public class ActiveEndpointFactory implements EndpointFactory
     }
     /**
      * Serial port
-     *
      * @return
      */
     @Override
@@ -47,7 +46,6 @@ public class ActiveEndpointFactory implements EndpointFactory
     }
     /**
      * Websocket, GUI
-     *
      * @return
      */
     @Override
@@ -58,7 +56,6 @@ public class ActiveEndpointFactory implements EndpointFactory
     }
     /**
      * Websocket, GUI
-     *
      * @return
      */
     @Override
@@ -69,7 +66,6 @@ public class ActiveEndpointFactory implements EndpointFactory
     }
     /**
      * Serial port
-     *
      * @return
      */
     @Override

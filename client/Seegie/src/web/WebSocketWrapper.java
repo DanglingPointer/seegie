@@ -20,8 +20,6 @@ import java_websocket.client.WebSocketClient;
 import java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
 
 public class WebSocketWrapper extends WebSocketClient
 {
@@ -33,38 +31,32 @@ public class WebSocketWrapper extends WebSocketClient
         void onErrorOccurred(Exception ex);
     }
 
-    private final Set<Listener> m_listeners = new HashSet<>();
+    private Listener m_listener;
 
     public WebSocketWrapper(URI serverUri) {
         super(serverUri);
     }
-    public void addListener(Listener listener) {
-        m_listeners.add(listener);
-    }
-    public void removeListener(Listener listener) {
-        m_listeners.remove(listener);
-    }
-    public void removeAllListeners() {
-        m_listeners.clear();
+    public void setListener(Listener listener) {
+        m_listener = listener;
     }
     @Override
     public void onOpen(ServerHandshake handshakedata) {
-        for (Listener l : m_listeners)
-            l.onOpened(handshakedata);
+        if (m_listener != null)
+            m_listener.onOpened(handshakedata);
     }
     @Override
     public void onMessage(String message) {
-        for (Listener l : m_listeners)
-            l.onMessageReceived(message);
+        if (m_listener != null)
+            m_listener.onMessageReceived(message);
     }
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        for (Listener l : m_listeners)
-            l.onClosed(code, reason, remote);
+        if (m_listener != null)
+            m_listener.onClosed(code, reason, remote);
     }
     @Override
     public void onError(Exception ex) {
-        for (Listener l : m_listeners)
-            l.onErrorOccurred(ex);
+        if (m_listener != null)
+            m_listener.onErrorOccurred(ex);
     }
 }

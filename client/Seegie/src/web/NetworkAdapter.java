@@ -25,28 +25,48 @@ import models.BCICommand;
 import models.EEGData;
 import models.Serializer;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEndpoint, CmdOutEndpoint
 {
-    private final WebSocketWrapper m_socket;
+    private final WebSocketWrapper             m_socket;
+    private final Set<CmdInEndpoint.Listener>  m_cmdListeners;
+    private final Set<DataInEndpoint.Listener> m_dataListeners;
 
     NetworkAdapter(WebSocketWrapper ws) {
+        m_cmdListeners = new HashSet<>();
+        m_dataListeners = new HashSet<>();
         m_socket = ws;
-    }
-    @Override
-    public void addListener(CmdInEndpoint.Listener listener) {
-        m_socket.addListener(new WebSocketWrapper.Listener()
+        m_socket.setListener(new WebSocketWrapper.Listener()
         {
             @Override
             public void onOpened(ServerHandshake handshake) {}
             @Override
             public void onMessageReceived(String message) {
-                listener.onCmdReceived(Serializer.json2Command(message));
+                if (message.contains("$$$")) {
+                    for (DataInEndpoint.Listener l : m_dataListeners)
+                        l.onInfoReceived(Serializer.json2Info(message));
+                }
+                else if (true) { // TODO: 01.10.2017 check that 'message' is data
+                    for (DataInEndpoint.Listener l : m_dataListeners)
+                        l.onDataReceived(Serializer.json2Data(message));
+                }
+                else { // TODO: 01.10.2017 check that 'message' is command
+                    for (CmdInEndpoint.Listener l : m_cmdListeners)
+                        l.onCmdReceived(Serializer.json2Command(message));
+                }
+
             }
             @Override
             public void onClosed(int code, String reason, boolean remote) {}
             @Override
             public void onErrorOccurred(Exception ex) {}
         });
+    }
+    @Override
+    public void addListener(CmdInEndpoint.Listener listener) {
+        m_cmdListeners.add(listener);
     }
     @Override
     public void sendCmd(BCICommand cmd) {
@@ -55,24 +75,7 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     }
     @Override
     public void addListener(DataInEndpoint.Listener listener) {
-        m_socket.addListener(new WebSocketWrapper.Listener()
-        {
-            @Override
-            public void onOpened(ServerHandshake handshake) {}
-            @Override
-            public void onMessageReceived(String message) {
-                if (message.contains("$$$")) {
-                    listener.onInfoReceived(message);
-                }
-                else {
-                    listener.onDataReceived(Serializer.json2Data(message));
-                }
-            }
-            @Override
-            public void onClosed(int code, String reason, boolean remote) {}
-            @Override
-            public void onErrorOccurred(Exception ex) {}
-        });
+        m_dataListeners.add(listener);
     }
     @Override
     public void sendData(EEGData data) {
@@ -86,14 +89,15 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     }
     @Override
     public void unregisterListeners() {
-        m_socket.removeAllListeners();
+        m_cmdListeners.clear();
+        m_dataListeners.clear();
     }
     @Override
     public void open() {
-        // TODO: 29.09.2017 open only if not already opened
+        // TODO: 29.09.2017 open socket only if not already opened
     }
     @Override
     public void close() {
-        // TODO: 29.09.2017 close only if not already closed
+        // TODO: 29.09.2017 close socket only if not already closed
     }
 }

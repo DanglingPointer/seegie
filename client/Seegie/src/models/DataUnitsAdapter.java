@@ -18,7 +18,7 @@ package models;
 
 import java.util.Arrays;
 
-public class DataConverter
+public class DataUnitsAdapter
 {
     private final EEGData m_data;
     private final double[] m_voltsData = new double[8];
@@ -26,7 +26,7 @@ public class DataConverter
     private double m_accelerationY;
     private double m_accelerationZ;
 
-    public DataConverter(EEGData rawData, int gain) {
+    public DataUnitsAdapter(EEGData rawData, int gain) {
         m_data = rawData;
         double eegScaleFactor = 4.5d / gain / 8388607.0d;
         double aclScaleFactor = 0.000125d;

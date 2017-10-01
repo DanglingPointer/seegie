@@ -29,7 +29,7 @@ public class EEGData
     private boolean m_timeStampSet;
 
     public EEGData(byte[] rawData) {
-        if (rawData.length != 33) {
+        if (rawData.length != 33 || ubyteToInt32(rawData[0]) != 0xA0) {
             throw new IllegalArgumentException("Data length = " + rawData.length);
         }
         parseBytes(rawData);

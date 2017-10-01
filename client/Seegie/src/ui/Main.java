@@ -19,6 +19,12 @@ package ui;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import core.IOBroker;
+import io.CmdInEndpoint;
+import io.CmdOutEndpoint;
+import io.DataInEndpoint;
+import io.DataOutEndpoint;
+import io.EndpointFactory;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -27,23 +33,46 @@ import javafx.stage.Stage;
 
 public class Main extends Application
 {
+    private GuiController m_controller;
+
+    private final IOBroker m_broker = new IOBroker();
+
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("sample.fxml"));
+        Parent root = loader.load();
+        m_controller = loader.getController();
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(new Scene(root, 300, 275));
         primaryStage.show();
     }
+    /**
+     * Sets up program mode (active/passive) depending on the factory type
+     * @param factory
+     */
+    public void setupMode(EndpointFactory factory) {
+        m_broker.unregisterAll();
+
+        DataInEndpoint[] dInEp = factory.getDataInEndpoints();
+        for (DataInEndpoint ep : dInEp) {
+            m_broker.registerEndpoint(ep);
+        }
+        CmdInEndpoint[] cInEp = factory.getCmdInEndpoints();
+        for (CmdInEndpoint ep : cInEp) {
+            m_broker.registerEndpoint(ep);
+        }
+        DataOutEndpoint[] dOutEp = factory.getDataOutEndpoints();
+        for (DataOutEndpoint ep : dOutEp) {
+            m_broker.registerEndpoint(ep);
+        }
+        CmdOutEndpoint[] cOutEp = factory.getCmdOutEndpoints();
+        for (CmdOutEndpoint ep : cOutEp) {
+            m_broker.registerEndpoint(ep);
+        }
+        m_broker.setupEndpoints();
+    }
 
     public static void main(String[] args) {
-
-        byte b = 0x0C;
-
-        int i = b;
-
-        if (i == 0x0C)
-            System.out.println("lol");
-
 //        try {
 //            SerialPort[] ports = SerialPort.getCommPorts();
 //            SerialPort com1 = ports[0];
