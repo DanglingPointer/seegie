@@ -1,59 +1,92 @@
 /*
- * MIT License
+ *    Copyright 2017 Mikhail Vasilyev
  *
- * Copyright (c) 2017 Mikhail Vasilyev
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ *        http://www.apache.org/licenses/LICENSE-2.0
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
  */
 
 package serial;
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortEvent;
+import com.fazecast.jSerialComm.SerialPortPacketListener;
 import io.CmdOutEndpoint;
 import io.DataInEndpoint;
-import models.BCICmd;
+import models.BCICommand;
+import models.EEGData;
+
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SerialAdapter implements DataInEndpoint, CmdOutEndpoint
 {
-    private final SerialPort m_port;
+    private final SerialPort                   m_port;
+    private final Set<DataInEndpoint.Listener> m_listeners;
 
     SerialAdapter(SerialPort port) {
         m_port = port;
+        m_listeners = new HashSet<>();
+        m_port.addDataListener(new SerialPortPacketListener()
+        {
+            @Override
+            public int getPacketSize() {
+                return 33;
+            }
+            @Override
+            public int getListeningEvents() {
+                return SerialPort.LISTENING_EVENT_DATA_AVAILABLE | SerialPort.LISTENING_EVENT_DATA_RECEIVED;
+            }
+            @Override
+            public void serialEvent(SerialPortEvent serialPortEvent) {
+                byte[] data = new byte[m_port.bytesAvailable()];
+                m_port.readBytes(data, data.length);
+
+                switch (serialPortEvent.getEventType()) {
+                    case SerialPort.LISTENING_EVENT_DATA_AVAILABLE:
+                        String message = new String(data, StandardCharsets.US_ASCII);
+                        for (DataInEndpoint.Listener l : m_listeners) {
+                            l.onInfoReceived(message);
+                        }
+                        break;
+                    case SerialPort.LISTENING_EVENT_DATA_RECEIVED:
+                        EEGData values = new EEGData(data);
+                        for (DataInEndpoint.Listener l : m_listeners) {
+                            l.onDataReceived(values);
+                        }
+                        break;
+                }
+            }
+        });
     }
     @Override
-    public void sendCmd(BCICmd cmd) {
-
+    public void sendCmd(BCICommand cmd) {
+        byte[] data = cmd.getBytes();
+        m_port.writeBytes(data, data.length);
     }
     @Override
     public void addListener(DataInEndpoint.Listener listener) {
-
+        m_listeners.add(listener);
     }
     @Override
     public void unregisterListeners() {
-
+        m_listeners.clear(); // do NOT remove listener from m_port!
     }
     @Override
     public void open() {
-
+        m_port.openPort();
     }
     @Override
     public void close() {
-
+        m_port.closePort();
     }
 }
