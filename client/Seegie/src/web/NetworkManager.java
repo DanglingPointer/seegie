@@ -16,7 +16,12 @@
 
 package web;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,5 +53,35 @@ public class NetworkManager
             }
         }
         return new NetworkAdapter(socket);
+    }
+    public String reserveSessionId(String httpLink) throws IOException {
+        URL link = new URL(httpLink);
+        String reply = "";
+        final int BUFFER_SIZE = 128;
+
+        HttpURLConnection conn = (HttpURLConnection)link.openConnection();
+        conn.setReadTimeout(10000);
+        conn.setConnectTimeout(15000);
+        conn.setRequestMethod("GET");
+        conn.setDoInput(true);
+        conn.connect();
+        int response = conn.getResponseCode();
+        if (response != HttpURLConnection.HTTP_OK)
+            throw new IOException("HTTP error: " + response);
+        InputStream inStream = conn.getInputStream();
+        if (inStream != null) {
+            InputStreamReader reader = new InputStreamReader(inStream);
+            char[] buffer = new char[BUFFER_SIZE];
+
+            int lastRead = 0, offset = 0;
+            while (lastRead != -1) {
+                lastRead = reader.read(buffer, offset, BUFFER_SIZE - offset);
+                offset += lastRead;
+            }
+            if (offset != -1)
+                reply = new String(buffer, 0, offset + 1);
+            inStream.close();
+        }
+        return reply;
     }
 }

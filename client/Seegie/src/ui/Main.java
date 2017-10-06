@@ -30,6 +30,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import web.NetworkManager;
 
 public class Main extends Application
 {
@@ -73,6 +74,18 @@ public class Main extends Application
     }
 
     public static void main(String[] args) {
+
+        NetworkManager man = NetworkManager.getInstance();
+        try {
+            for (int i = 0; i < 10; ++i) {
+                String sessionId = man.reserveSessionId("http://seegieapi.azurewebsites.net/");
+                System.out.println(sessionId);
+            }
+        }
+        catch (Exception ex) {
+            System.out.println(ex.toString());
+        }
+
 //        try {
 //            SerialPort[] ports = SerialPort.getCommPorts();
 //            SerialPort com1 = ports[0];
