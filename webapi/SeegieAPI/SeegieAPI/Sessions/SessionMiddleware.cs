@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using System.Net.WebSockets;
 using SeegieAPI.Registration;
+using System.Diagnostics;
 
 namespace SeegieAPI.Sessions
 {
@@ -38,29 +39,33 @@ namespace SeegieAPI.Sessions
         }
         public async Task Invoke(HttpContext ctx)
         {
-            if (ctx.Request.Query.Count == 2) {
+            try {
+                if (ctx.Request.Query.Count != 2)
+                    throw new Exception("Illegal number of request arguments");
+
                 string sessionId = ctx.Request.Query["sessionid"];
                 Guid id = Guid.Parse(sessionId);
                 string role = ctx.Request.Query["role"];
-
-                if (_guidFactory.IsIdTaken(id)) {
-                    if (role == "leech") {
-                        WebSocket ws = await ctx.WebSockets.AcceptWebSocketAsync();
-                        var handler = _manager.AddLeech(id, ws);
-                        await handler.ListenAsync();
-                    }
-                    else if (role == "seed") {
-                        WebSocket ws = await ctx.WebSockets.AcceptWebSocketAsync();
-                        var handler = _manager.AddSeed(id, ws);
-                        await handler.ListenAsync();
-                    }
-                    else {
-                        ctx.Response.StatusCode = 400;
-                    }
-                    return;
+                
+                if (role == "leech" && _guidFactory.IsIdUsed(id)) {
+                    WebSocket ws = await ctx.WebSockets.AcceptWebSocketAsync();
+                    var handler = _manager.AddLeech(id, ws);
+                    await handler.ListenAsync();
+                }
+                else if (role == "seed" && _guidFactory.TryUseId(id)) {
+                    WebSocket ws = await ctx.WebSockets.AcceptWebSocketAsync();
+                    var handler = _manager.AddSeed(id, ws);
+                    await handler.ListenAsync();
+                }
+                else {
+                    throw new Exception("Illegal request arguments");
                 }
             }
-            ctx.Response.StatusCode = 404;
+            catch (Exception ex) {
+                if (!ctx.Response.HasStarted)
+                    ctx.Response.StatusCode = 400;
+                Debug.WriteLine(ex.ToString());
+            }
         }
     }
     public static class SessionMiddlewareExtensions

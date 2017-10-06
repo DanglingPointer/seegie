@@ -14,38 +14,75 @@
 ///   limitations under the License.
 ///
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace SeegieAPI.Registration
 {
     public interface IGuidService
     {
-        Guid GetNextId();
-        bool IsIdTaken(Guid id);
+        Guid ReserveNextId();
+        bool TryUseId(Guid id);
+        bool IsIdUsed(Guid id);
         void FreeId(Guid id);
     }
+
     public class GuidService : IGuidService
     {
-        private readonly SortedSet<Guid> _takenIds = new SortedSet<Guid>();
-        
-        public Guid GetNextId()
+        private class LifetimeCounter
         {
+            public int Counter { get; set; }
+            public static implicit operator LifetimeCounter(int count)
+            {
+                return new LifetimeCounter { Counter = count };
+            }
+        }
+        private readonly IDictionary<Guid, LifetimeCounter> _reservedIds;
+        private readonly ISet<Guid> _inUseIds;
+        private const int INITIAL_LIFETIME = 20; // max number of reserved ids at any time
+
+        public GuidService()
+        {
+            _reservedIds = new ConcurrentDictionary<Guid, LifetimeCounter>();
+            _inUseIds = new SortedSet<Guid>();
+        }
+        public Guid ReserveNextId()
+        {
+            // generate new id and add to reserved
             Guid id;
             do {
                 id = Guid.NewGuid();
-            } while (_takenIds.Contains(id));
-            _takenIds.Add(id);
+            } while (_reservedIds.ContainsKey(id) || _inUseIds.Contains(id));
+            _reservedIds.Add(id, INITIAL_LIFETIME);
+
+            // decrement all counters and remove those getting below 0
+            foreach (var tuple in _reservedIds) {
+                if (--tuple.Value.Counter < 0)
+                    _reservedIds.Remove(tuple.Key);
+            }
+            //Debug.WriteLine($"Reserved ids count = {_reservedIds.Count}");
+            //Debug.WriteLine($"In-use ids count = {_inUseIds.Count}");
             return id;
         }
-        public bool IsIdTaken(Guid id)
+        public bool TryUseId(Guid id)
         {
-            return _takenIds.Contains(id);
+            // move id from reserved to in-use
+            bool reserved = _reservedIds.ContainsKey(id);
+            if (reserved) {
+                _reservedIds.Remove(id);
+                _inUseIds.Add(id);
+            }
+            return reserved;
+        }
+        public bool IsIdUsed(Guid id)
+        {
+            return _inUseIds.Contains(id);
         }
         public void FreeId(Guid id)
         {
-            _takenIds.Remove(id);        
+            _inUseIds.Remove(id);
         }
+
     }
 }

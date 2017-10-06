@@ -13,10 +13,10 @@
 ///   See the License for the specific language governing permissions and
 ///   limitations under the License.
 ///
-using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.WebSockets;
@@ -29,9 +29,8 @@ namespace SeegieAPI.Sessions
     public interface IConnectionManager
     {
         Task ListenAsync();
-        Task CloseConnection();
+        Task CloseConnectionAsync();
     }
-
     public class ClientManager : IConnectionManager
     {
         private readonly WebSocket _socket;
@@ -50,36 +49,42 @@ namespace SeegieAPI.Sessions
         public uint BufferSize { get; set; }
         public async Task ListenAsync()
         {
+            //string who = (IsSeed ? "Seed" : "Leech");
+            //Debug.WriteLine(who + " started listening");
+
             byte[] buffer = new byte[BufferSize];
             while (_socket.State == WebSocketState.Open) {
                 WebSocketReceiveResult result =
                     await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-
+                
+                //Debug.WriteLine(who + " received a message");
                 if (result.MessageType == WebSocketMessageType.Text) {
                     string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    if (DataReceived != null) {
-                        foreach (Action<string> handler in DataReceived.GetInvocationList())
-                            handler.BeginInvoke(message, null, null);
-                    }
+                    DataReceived?.Invoke(message);
                 }
                 else if (result.MessageType == WebSocketMessageType.Close) {
-                    if (ConnectionClosed != null) {
-                        foreach (Action<WebSocketReceiveResult> handler in ConnectionClosed.GetInvocationList())
-                            handler.BeginInvoke(result, null, null);
-                    }
+                    //Debug.WriteLine(who + " received a closing message");
+                    ConnectionClosed?.Invoke(result);
                 }
             }
         }
-        public async Task CloseConnection()
+        public async Task CloseConnectionAsync()
         {
-            await _socket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, "No data available", CancellationToken.None);            
+            if (_socket.State != WebSocketState.Closed)
+                await _socket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, "No data available", CancellationToken.None);
+
+            //string who = (IsSeed ? "Seed" : "Leech");
+            //Debug.WriteLine(who + " closed connection");
         }
         public async Task SendMessageAsync(String text)
         {
             if (_socket.State != WebSocketState.Open)
                 return;
-            byte[] arr = Encoding.UTF8.GetBytes(text);
 
+            //string who = (IsSeed ? "Seed" : "Leech");
+            //Debug.WriteLine(who + " is about to send a message");
+
+            byte[] arr = Encoding.UTF8.GetBytes(text);
             var buffer = new ArraySegment<byte>(
                     array: arr,
                     offset: 0,
@@ -91,11 +96,10 @@ namespace SeegieAPI.Sessions
                 messageType: WebSocketMessageType.Text,
                 endOfMessage: true,
                 cancellationToken: CancellationToken.None
-                );
+                );            
+            //Debug.WriteLine(who + " has sent a message");
         }
     }
-    
-
     public class SessionManager
     {
         private readonly IDictionary<Guid, ClientManager> _seeds;
@@ -111,8 +115,8 @@ namespace SeegieAPI.Sessions
         public IConnectionManager AddSeed(Guid id, WebSocket sock)
         {
             var seed = new ClientManager(sock, id, true);
-            seed.ConnectionClosed += (result) => {
-                CloseSession(id);
+            seed.ConnectionClosed += async (result) => {
+                await CloseSessionAsync(id);
             };
             _seeds.Add(id, seed);
             return seed;
@@ -138,24 +142,26 @@ namespace SeegieAPI.Sessions
             newLeech.ConnectionClosed += (result) => {
                 // unsubscribe and remove dead leeches
                 seed.DataReceived -= onEegDataReceivedHandler;
-                _leeches[id].Remove(newLeech);
+                if (_leeches.ContainsKey(id))
+                    _leeches[id].Remove(newLeech);
             };
             newLeech.DataReceived += async (bciCmd) => {
                 await seed.SendMessageAsync(bciCmd);
             };
             return newLeech;
         }
-        public async void CloseSession(Guid id)
+        public async Task CloseSessionAsync(Guid id)
         {
             if (_seeds.ContainsKey(id)) {
                 var seed = _seeds[id];
                 _seeds.Remove(id);
-                await seed.CloseConnection();
+                await seed.CloseConnectionAsync();
             }
             if (_leeches.ContainsKey(id)) {
                 var list = _leeches[id];
                 _leeches.Remove(id);
-                list.AsParallel().ForAll(client => client.CloseConnection());
+                foreach(var leech in list)
+                    await leech.CloseConnectionAsync();                
             }
             _freeGuid(id);
         }
