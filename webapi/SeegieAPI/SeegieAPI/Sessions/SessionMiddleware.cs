@@ -47,7 +47,7 @@ namespace SeegieAPI.Sessions
                 Guid id = Guid.Parse(sessionId);
                 string role = ctx.Request.Query["role"];
 
-                if (_guidFactory.IsIdTaken(id)) {
+                if (_guidFactory.TakeInUseId(id)) {
                     if (role == "leech") {
                         WebSocket ws = await ctx.WebSockets.AcceptWebSocketAsync();
                         var handler = _manager.AddLeech(id, ws);
@@ -64,7 +64,8 @@ namespace SeegieAPI.Sessions
                 }
             }
             catch (Exception ex) {
-                ctx.Response.StatusCode = 400;
+                if (!ctx.Response.HasStarted)
+                    ctx.Response.StatusCode = 400;
                 Debug.WriteLine(ex.ToString());
             }
         }
