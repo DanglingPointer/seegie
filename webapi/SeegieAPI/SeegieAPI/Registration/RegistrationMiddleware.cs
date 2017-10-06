@@ -22,7 +22,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace SeegieAPI.Registration
 {
-    // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
     public class RegistrationMiddleware
     {
         private readonly RequestDelegate _next;
@@ -36,8 +35,7 @@ namespace SeegieAPI.Registration
 
         public async Task Invoke(HttpContext ctx)
         {
-            await ctx.Response.WriteAsync(_guidFactory.GetNextId().ToString());
-            //return _next(context);
+            await ctx.Response.WriteAsync(_guidFactory.ReserveNextId().ToString());
         }
     }
     public static class RegistrationMiddlewareExtensions
