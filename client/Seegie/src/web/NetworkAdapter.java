@@ -20,7 +20,7 @@ import io.CmdInEndpoint;
 import io.CmdOutEndpoint;
 import io.DataInEndpoint;
 import io.DataOutEndpoint;
-import java_websocket.handshake.ServerHandshake;
+import org.java_websocket.handshake.ServerHandshake;
 import models.BCICommand;
 import models.EEGData;
 import models.Serializer;
