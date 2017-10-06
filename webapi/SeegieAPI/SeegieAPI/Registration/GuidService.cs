@@ -23,7 +23,8 @@ namespace SeegieAPI.Registration
     public interface IGuidService
     {
         Guid ReserveNextId();
-        bool TakeInUseId(Guid id);
+        bool TryUseId(Guid id);
+        bool IsIdUsed(Guid id);
         void FreeId(Guid id);
     }
 
@@ -64,7 +65,7 @@ namespace SeegieAPI.Registration
             //Debug.WriteLine($"In-use ids count = {_inUseIds.Count}");
             return id;
         }
-        public bool TakeInUseId(Guid id)
+        public bool TryUseId(Guid id)
         {
             // move id from reserved to in-use
             bool reserved = _reservedIds.ContainsKey(id);
@@ -74,9 +75,14 @@ namespace SeegieAPI.Registration
             }
             return reserved;
         }
+        public bool IsIdUsed(Guid id)
+        {
+            return _inUseIds.Contains(id);
+        }
         public void FreeId(Guid id)
         {
             _inUseIds.Remove(id);
         }
+
     }
 }

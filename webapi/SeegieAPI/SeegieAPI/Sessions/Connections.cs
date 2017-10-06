@@ -31,7 +31,6 @@ namespace SeegieAPI.Sessions
         Task ListenAsync();
         Task CloseConnectionAsync();
     }
-
     public class ClientManager : IConnectionManager
     {
         private readonly WebSocket _socket;
@@ -52,7 +51,6 @@ namespace SeegieAPI.Sessions
         {
             //string who = (IsSeed ? "Seed" : "Leech");
             //Debug.WriteLine(who + " started listening");
-
 
             byte[] buffer = new byte[BufferSize];
             while (_socket.State == WebSocketState.Open) {
@@ -87,7 +85,6 @@ namespace SeegieAPI.Sessions
             //Debug.WriteLine(who + " is about to send a message");
 
             byte[] arr = Encoding.UTF8.GetBytes(text);
-
             var buffer = new ArraySegment<byte>(
                     array: arr,
                     offset: 0,
@@ -99,13 +96,10 @@ namespace SeegieAPI.Sessions
                 messageType: WebSocketMessageType.Text,
                 endOfMessage: true,
                 cancellationToken: CancellationToken.None
-                );
-            
+                );            
             //Debug.WriteLine(who + " has sent a message");
         }
     }
-    
-
     public class SessionManager
     {
         private readonly IDictionary<Guid, ClientManager> _seeds;

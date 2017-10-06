@@ -46,21 +46,19 @@ namespace SeegieAPI.Sessions
                 string sessionId = ctx.Request.Query["sessionid"];
                 Guid id = Guid.Parse(sessionId);
                 string role = ctx.Request.Query["role"];
-
-                if (_guidFactory.TakeInUseId(id)) {
-                    if (role == "leech") {
-                        WebSocket ws = await ctx.WebSockets.AcceptWebSocketAsync();
-                        var handler = _manager.AddLeech(id, ws);
-                        await handler.ListenAsync();
-                    }
-                    else if (role == "seed") {
-                        WebSocket ws = await ctx.WebSockets.AcceptWebSocketAsync();
-                        var handler = _manager.AddSeed(id, ws);
-                        await handler.ListenAsync();
-                    }
-                    else {
-                        throw new Exception("Illegal request arguments");
-                    }
+                
+                if (role == "leech" && _guidFactory.IsIdUsed(id)) {
+                    WebSocket ws = await ctx.WebSockets.AcceptWebSocketAsync();
+                    var handler = _manager.AddLeech(id, ws);
+                    await handler.ListenAsync();
+                }
+                else if (role == "seed" && _guidFactory.TryUseId(id)) {
+                    WebSocket ws = await ctx.WebSockets.AcceptWebSocketAsync();
+                    var handler = _manager.AddSeed(id, ws);
+                    await handler.ListenAsync();
+                }
+                else {
+                    throw new Exception("Illegal request arguments");
                 }
             }
             catch (Exception ex) {
