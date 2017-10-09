@@ -21,56 +21,62 @@ import io.CmdOutEndpoint;
 import io.DataInEndpoint;
 import io.DataOutEndpoint;
 import io.EndpointFactory;
-import serial.SerialAdapter;
-import serial.SerialManager;
 import web.NetworkAdapter;
 import web.NetworkManager;
 
-public class ActiveEndpointFactory implements EndpointFactory
+public class LeechEndpointFactory implements EndpointFactory
 {
-    private final String m_serialName;
-    private final String m_wsLink;
+    private final String m_wsId;
 
-    public ActiveEndpointFactory(String serialPortName, String websockLink) {
-        m_serialName = serialPortName;
-        m_wsLink = websockLink;
+    public LeechEndpointFactory(String websockId) {
+        m_wsId = websockId;
     }
     /**
-     * Serial port
+     * Websocket
      * @return
      */
     @Override
     public DataInEndpoint[] getDataInEndpoints() {
-        SerialAdapter serial = SerialManager.getInstance().getAdapter(m_serialName);
-        return new DataInEndpoint[]{ serial };
+        NetworkAdapter net = null;
+        try {
+            net = NetworkManager.getInstance().getAdapter(m_wsId, false);
+        }
+        catch (Exception e) {
+            System.out.println(e.toString());
+        }
+        return new DataInEndpoint[]{ net };
     }
     /**
-     * Websocket, GUI
+     * GUI
      * @return
      */
     @Override
     public CmdInEndpoint[] getCmdInEndpoints() {
-        NetworkAdapter net = NetworkManager.getInstance().getAdapter(m_wsLink);
         // TODO: 29.09.2017 obtain GUI adapter
-        return new CmdInEndpoint[]{ net, null };
+        return new CmdInEndpoint[0];
     }
     /**
-     * Websocket, GUI
+     * GUI
      * @return
      */
     @Override
     public DataOutEndpoint[] getDataOutEndpoints() {
-        NetworkAdapter net = NetworkManager.getInstance().getAdapter(m_wsLink);
         // TODO: 29.09.2017 obtain GUI adapter
-        return new DataOutEndpoint[]{ net, null };
+        return new DataOutEndpoint[0];
     }
     /**
-     * Serial port
+     * Websocket
      * @return
      */
     @Override
     public CmdOutEndpoint[] getCmdOutEndpoints() {
-        SerialAdapter serial = SerialManager.getInstance().getAdapter(m_serialName);
-        return new CmdOutEndpoint[]{ serial };
+        NetworkAdapter net = null;
+        try {
+            net = NetworkManager.getInstance().getAdapter(m_wsId, false);
+        }
+        catch (Exception e) {
+            System.out.println(e.toString());
+        }
+        return new CmdOutEndpoint[]{ net };
     }
 }

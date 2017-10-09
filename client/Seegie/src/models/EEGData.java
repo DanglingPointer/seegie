@@ -16,17 +16,16 @@
 
 package models;
 
-import java.util.Arrays;
 
 public class EEGData
 {
-    private int  m_sampleNumber;
-    private long m_timeStamp;
-    private final int[] m_channelData = new int[8];
-    private int     m_accelerationX;
-    private int     m_accelerationY;
-    private int     m_accelerationZ;
-    private boolean m_timeStampSet;
+    public int  sampleNum;
+    public long timeStamp;
+    public final int[] channelData = new int[8];
+    public int     acclX;
+    public int     acclY;
+    public int     acclZ;
+    public boolean timeStampSet;
 
     public EEGData(byte[] rawData) {
         if (rawData.length != 33 || ubyteToInt32(rawData[0]) != 0xA0) {
@@ -34,57 +33,38 @@ public class EEGData
         }
         parseBytes(rawData);
     }
-    public int getSampleNumber() {
-        return m_sampleNumber;
-    }
-    public long getTimeStamp() {
-        return m_timeStamp;
-    }
-    public boolean getTimeStampSet() {
-        return m_timeStampSet;
-    }
-    public int[] getChannelData() {
-        return Arrays.copyOf(m_channelData, m_channelData.length);
-    }
-    public int getAccelerationX() {
-        return m_accelerationX;
-    }
-    public int getAccelerationY() {
-        return m_accelerationY;
-    }
-    public int getAccelerationZ() {
-        return m_accelerationZ;
-    }
+    private EEGData() {} // for deserialization
+
     private void parseBytes(byte[] rawData) {
         int channelIndex = 0;
         for (int rawIndex = 2; rawIndex <= 23; rawIndex += 3) {
             byte[] value = new byte[3];
             System.arraycopy(rawData, rawIndex, value, 0, 3);
-            m_channelData[channelIndex] = int24ToInt32(value);
+            channelData[channelIndex] = int24ToInt32(value);
             channelIndex++;
         }
-        m_sampleNumber = ubyteToInt32(rawData[1]);
+        sampleNum = ubyteToInt32(rawData[1]);
 
         int stopByte = ubyteToInt32(rawData[32]);
         if (stopByte == 0xC0) {
             byte[] accelX = new byte[2];
             System.arraycopy(rawData, 26, accelX, 0, 2);
-            m_accelerationX = int16ToInt32(accelX);
+            acclX = int16ToInt32(accelX);
 
             byte[] accelY = new byte[2];
             System.arraycopy(rawData, 28, accelY, 0, 2);
-            m_accelerationY = int16ToInt32(accelY);
+            acclY = int16ToInt32(accelY);
 
             byte[] accelZ = new byte[2];
             System.arraycopy(rawData, 30, accelZ, 0, 2);
-            m_accelerationZ = int16ToInt32(accelZ);
+            acclZ = int16ToInt32(accelZ);
         }
         else if (stopByte >= 0xC3 && stopByte <= 0xC6) {
             byte[] timeStamp = new byte[4];
             System.arraycopy(rawData, 28, timeStamp, 0, 4);
-            m_timeStamp = uint32ToLong(timeStamp);
+            this.timeStamp = uint32ToLong(timeStamp);
         }
-        m_timeStampSet = (stopByte == 0xC3 || stopByte == 0xC5);
+        timeStampSet = (stopByte == 0xC3 || stopByte == 0xC5);
     }
     private static int ubyteToInt32(byte unsigned) {
         return (0xFF & unsigned);

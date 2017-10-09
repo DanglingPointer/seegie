@@ -19,6 +19,8 @@ package ui;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import com.jsoniter.JsonIterator;
+import com.jsoniter.output.JsonStream;
 import core.IOBroker;
 import io.CmdInEndpoint;
 import io.CmdOutEndpoint;
@@ -30,7 +32,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import models.BCICommand;
+import models.EEGData;
+import models.Serializer;
+import web.NetworkAdapter;
 import web.NetworkManager;
+
+import java.util.Random;
 
 public class Main extends Application
 {
@@ -73,59 +81,120 @@ public class Main extends Application
         m_broker.setupEndpoints();
     }
 
-    public static void main(String[] args) {
-
+    static void networkTest() {
         NetworkManager man = NetworkManager.getInstance();
         try {
-            for (int i = 0; i < 10; ++i) {
-                String sessionId = man.reserveSessionId("http://seegieapi.azurewebsites.net/");
-                System.out.println(sessionId);
-            }
-        }
-        catch (Exception ex) {
-            System.out.println(ex.toString());
-        }
+            String sessionId = man.reserveSessionId();
+            System.out.println("Session id: " + sessionId);
+            NetworkAdapter adapter = man.getAdapter(sessionId, true);
+            adapter.addListener(cmd -> System.out.println("Cmd received: " + cmd.toString()));
+            adapter.open();
+            for (; ; ) {
+                Random r = new Random();
+                byte[] raw = new byte[33];
+                r.nextBytes(raw);
+                raw[0] = (byte)0xA0;
+                raw[32] = (byte)(0xC3 & 0x000000FF);
+                EEGData d = new EEGData(raw);
 
-//        try {
-//            SerialPort[] ports = SerialPort.getCommPorts();
-//            SerialPort com1 = ports[0];
-//            SerialPort com2 = ports[1];
-//
-//            com1.openPort();
-//            System.out.println("COM1 open: " + com1.isOpen());
-//            com2.openPort();
-//            System.out.println("COM2 open: " + com2.isOpen());
-//            com2.addDataListener(new SerialPortDataListener()
-//            {
-//                @Override
-//                public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_AVAILABLE; }
-//                @Override
-//                public void serialEvent(SerialPortEvent event)
-//                {
-//                    System.out.println("Serial event triggered");
-//                    if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
-//                        return;
-//                    byte[] newData = new byte[com2.bytesAvailable()];
-//                    int numRead = com2.readBytes(newData, newData.length);
-//                    System.out.println("Read " + numRead + " bytes.");
-//                    for (byte b : newData) {
-//                        System.out.print(b);
-//                    }
-//                }
-//            });
-//
-//            com1.writeBytes(new byte[]{ 0, 1, 2, 3, 4, 5 }, 6);
-//
-//            com1.closePort();
-//            com2.closePort();
-//
-//            System.out.println("\nCOM1 open: " + com1.isOpen());
-//            System.out.println("COM2 open: " + com2.isOpen());
-//        }
-//        catch (Exception e) {
-//            System.out.println(e.toString());
-//            e.printStackTrace();
-//        }
+                adapter.sendData(d);
+//                System.out.println("Data sent successfully");
+                Thread.sleep(20);
+            }
+
+        }
+        catch (Exception e) {
+            System.out.println(e.toString());
+        }
+    }
+    static void serialTest() {
+        try {
+            SerialPort[] ports = SerialPort.getCommPorts();
+            SerialPort com1 = ports[0];
+            SerialPort com2 = ports[1];
+
+            com1.openPort();
+            System.out.println("COM1 open: " + com1.isOpen());
+            com2.openPort();
+            System.out.println("COM2 open: " + com2.isOpen());
+            com2.addDataListener(new SerialPortDataListener()
+            {
+                @Override
+                public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_AVAILABLE; }
+                @Override
+                public void serialEvent(SerialPortEvent event) {
+                    System.out.println("Serial event triggered");
+                    if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
+                        return;
+                    byte[] newData = new byte[com2.bytesAvailable()];
+                    int numRead = com2.readBytes(newData, newData.length);
+                    System.out.println("Read " + numRead + " bytes.");
+                    for (byte b : newData) {
+                        System.out.print(b);
+                    }
+                }
+            });
+
+            com1.writeBytes(new byte[]{ 0, 1, 2, 3, 4, 5 }, 6);
+
+            com1.closePort();
+            com2.closePort();
+
+            System.out.println("\nCOM1 open: " + com1.isOpen());
+            System.out.println("COM2 open: " + com2.isOpen());
+        }
+        catch (Exception e) {
+            System.out.println(e.toString());
+            e.printStackTrace();
+        }
+    }
+    static void serializeCmdTest() {
+        BCICommand.Builder b = new BCICommand.Builder();
+        b.addChanSettingsCmd(3, true, 4, BCICommand.ADSINPUT_NORMAL, false, true, true);
+        BCICommand cmd = b.build();
+
+        String json = Serializer.command2Json(cmd);
+        System.out.println(json);
+
+        BCICommand newCmd = Serializer.json2Command(json);
+        System.out.println("Commands are equal: " + newCmd.equals(cmd));
+    }
+    static void serializeDataTest() {
+        Random r = new Random(15);
+        byte[] raw = new byte[33];
+        r.nextBytes(raw);
+        raw[0] = (byte)0xA0;
+        raw[32] = (byte)(0xC0 & 0x000000FF);
+        EEGData dd = new EEGData(raw);
+
+        System.out.println("X = " + dd.acclX);
+        System.out.println("Y = " + dd.acclY);
+        System.out.println("Z = " + dd.acclZ);
+        for (int b : dd.channelData) {
+            System.out.println(b);
+        }
+        System.out.println("Sample number = " + dd.sampleNum);
+        System.out.println("Timestamp = " + dd.timeStamp);
+        System.out.println("Timestamp set = " + dd.timeStampSet);
+
+
+        String jsonData = Serializer.data2Json(dd);
+        System.out.println(jsonData);
+
+        EEGData d = Serializer.json2Data(jsonData);
+        System.out.println("X = " + d.acclX);
+        System.out.println("Y = " + d.acclY);
+        System.out.println("Z = " + d.acclZ);
+        for (int b : d.channelData) {
+            System.out.println(b);
+        }
+        System.out.println("Sample number = " + d.sampleNum);
+        System.out.println("Timestamp = " + d.timeStamp);
+        System.out.println("Timestamp set = " + d.timeStampSet);
+    }
+
+    public static void main(String[] args) {
+        networkTest();
 
         launch(args);
     }

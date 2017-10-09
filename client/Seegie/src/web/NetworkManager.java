@@ -21,9 +21,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 public class NetworkManager
 {
@@ -32,30 +31,28 @@ public class NetworkManager
         return s_instance;
     }
 
-    private final Map<String, WebSocketWrapper> m_sockets;
+    private final String         m_wsLink;
+    private final String         m_httpLink;
+    private       NetworkAdapter m_currentAdapter;
 
     private NetworkManager() {
-        m_sockets = new HashMap<>();
+        m_wsLink = "ws://seegieapi.azurewebsites.net?";
+        m_httpLink = "http://seegieapi.azurewebsites.net/";
+        m_currentAdapter = null;
+        // TODO: 09.10.2017 read from json file if present
     }
-    public NetworkAdapter getAdapter(String wsLink) {
-        WebSocketWrapper socket = null;
-        if (m_sockets.containsKey(wsLink)) {
-            socket = m_sockets.get(wsLink);
+    public NetworkAdapter getAdapter(String id, boolean isSeed) throws URISyntaxException {
+        if (m_currentAdapter == null
+            || !m_currentAdapter.getId().equals(id)
+            || m_currentAdapter.isSeed() != isSeed) {
+            String link = m_wsLink + "role=" + (isSeed ? "seed" : "leech") + "&sessionid=" + id;
+            WebSocketWrapper socket = new WebSocketWrapper(new URI(link));
+            m_currentAdapter = new NetworkAdapter(socket, id, isSeed);
         }
-        else {
-            try {
-                URI link = new URI(wsLink);
-                socket = new WebSocketWrapper(link);
-                m_sockets.put(wsLink, socket);
-            }
-            catch (Exception e) {
-                throw new IllegalArgumentException(e.toString());
-            }
-        }
-        return new NetworkAdapter(socket);
+        return m_currentAdapter;
     }
-    public String reserveSessionId(String httpLink) throws IOException {
-        URL link = new URL(httpLink);
+    public String reserveSessionId() throws IOException {
+        URL link = new URL(m_httpLink);
         String reply = "";
         final int BUFFER_SIZE = 128;
 

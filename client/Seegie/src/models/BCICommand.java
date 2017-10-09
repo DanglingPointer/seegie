@@ -259,7 +259,7 @@ class BCICommandImpl implements BCICommand
     }
     @Override
     public boolean equals(Object obj) {
-        return (obj instanceof BCICommand) && (toString().equals(obj.toString()));
+        return (obj != null) && (obj instanceof BCICommand) && (toString().equals(obj.toString()));
     }
     @Override
     public int hashCode() {
