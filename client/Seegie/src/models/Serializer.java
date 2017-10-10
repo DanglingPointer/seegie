@@ -70,7 +70,7 @@ public final class Serializer
     }
     public static EEGData json2Data(String json) {
         Datagram2 dgram = JsonIterator.deserialize(json, Datagram2.class);
-        return dgram.content;
+        return dgram.type.equals(TYPE_DATA) ? dgram.content : null;
     }
 
 }

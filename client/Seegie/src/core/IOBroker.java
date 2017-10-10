@@ -22,6 +22,8 @@ import io.DataInEndpoint;
 import io.DataOutEndpoint;
 import io.InEndpoint;
 import io.OutEndpoint;
+import models.BCICommand;
+import models.EEGData;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -29,42 +31,88 @@ import java.util.Set;
 
 public class IOBroker
 {
-    private final Set<InEndpoint>  m_inEndpoints  = new HashSet<>();
-    private final Set<OutEndpoint> m_outEndpoints = new HashSet<>();
+    private final Set<CmdInEndpoint>   m_cmdInEndpoints   = new HashSet<>();
+    private final Set<CmdOutEndpoint>  m_cmdOutEndpoints  = new HashSet<>();
+    private final Set<DataInEndpoint>  m_dataInEndpoints  = new HashSet<>();
+    private final Set<DataOutEndpoint> m_dataOutEndpoints = new HashSet<>();
 
     public void registerEndpoint(DataInEndpoint ep) {
-        // TODO: 29.09.2017
+        m_dataInEndpoints.add(ep);
     }
     public void unregisterEndpoint(DataInEndpoint ep) {
-        // TODO: 29.09.2017
+        m_dataInEndpoints.remove(ep);
     }
 
     public void registerEndpoint(CmdInEndpoint ep) {
-        // TODO: 29.09.2017
+        m_cmdInEndpoints.add(ep);
     }
     public void unregisterEndpoint(CmdInEndpoint ep) {
-        // TODO: 29.09.2017
+        m_cmdInEndpoints.remove(ep);
     }
 
     public void registerEndpoint(DataOutEndpoint ep) {
-        // TODO: 29.09.2017
+        m_dataOutEndpoints.add(ep);
     }
     public void unregisterEndpoint(DataOutEndpoint ep) {
-        // TODO: 29.09.2017
+        m_dataOutEndpoints.remove(ep);
     }
 
     public void registerEndpoint(CmdOutEndpoint ep) {
-        // TODO: 29.09.2017
+        m_cmdOutEndpoints.add(ep);
     }
     public void unregisterEndpoint(CmdOutEndpoint ep) {
-        // TODO: 29.09.2017
+        m_cmdOutEndpoints.remove(ep);
     }
 
     public void setupEndpoints() {
-        // TODO: 29.09.2017 add listeners between registered endpoints. Do we need it??
+        for (CmdInEndpoint iep : m_cmdInEndpoints) {
+            iep.addListener(cmd -> {
+                for (CmdOutEndpoint oep : m_cmdOutEndpoints)
+                    oep.sendCmd(cmd);
+            });
+        }
+        for (DataInEndpoint iep : m_dataInEndpoints) {
+            iep.addListener(new DataInEndpoint.Listener()
+            {
+                @Override
+                public void onDataReceived(EEGData data) {
+                    for (DataOutEndpoint oep : m_dataOutEndpoints)
+                        oep.sendData(data);
+                }
+                @Override
+                public void onInfoReceived(String info) {
+                    for (DataOutEndpoint oep : m_dataOutEndpoints)
+                        oep.sendInfo(info);
+                }
+            });
+        }
+        for (DataOutEndpoint oep : m_dataOutEndpoints)
+            oep.open();
+        for (CmdOutEndpoint oep : m_cmdOutEndpoints)
+            oep.open();
+        for (DataInEndpoint iep : m_dataInEndpoints)
+            iep.open();
+        for (CmdInEndpoint iep : m_cmdInEndpoints)
+            iep.open();
     }
-
     public void unregisterAll() {
-        // TODO: 29.09.2017 close all endpoints and clear all lists
+        for (CmdInEndpoint iep : m_cmdInEndpoints) {
+            iep.unregisterListeners();
+            iep.close();
+        }
+        for (DataInEndpoint iep : m_dataInEndpoints) {
+            iep.unregisterListeners();
+            iep.close();
+        }
+        for (CmdOutEndpoint oep : m_cmdOutEndpoints) {
+            oep.close();
+        }
+        for (DataOutEndpoint oep : m_dataOutEndpoints) {
+            oep.close();
+        }
+        m_cmdInEndpoints.clear();
+        m_cmdOutEndpoints.clear();
+        m_dataInEndpoints.clear();
+        m_dataOutEndpoints.clear();
     }
 }

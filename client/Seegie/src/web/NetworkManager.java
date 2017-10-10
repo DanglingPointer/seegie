@@ -16,6 +16,8 @@
 
 package web;
 
+import core.Settings;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,10 +38,9 @@ public class NetworkManager
     private       NetworkAdapter m_currentAdapter;
 
     private NetworkManager() {
-        m_wsLink = "ws://seegieapi.azurewebsites.net?";
-        m_httpLink = "http://seegieapi.azurewebsites.net/";
+        m_wsLink = Settings.getWsUrl();
+        m_httpLink = Settings.getApiUrl();
         m_currentAdapter = null;
-        // TODO: 09.10.2017 read from json file if present
     }
     public NetworkAdapter getAdapter(String id, boolean isSeed) throws URISyntaxException {
         if (m_currentAdapter == null

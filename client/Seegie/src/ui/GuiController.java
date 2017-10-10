@@ -28,6 +28,8 @@ public class GuiController implements Initializable
     public interface Listener
     {
         void onCommandCalled(BCICommand cmd);
+        void onSeedModeSet(String comPort);
+        void onLeechModeSet(String sessionId);
     }
 
     private Listener m_listener; // NB! Remember nullcheck before calling methods on it!

@@ -23,6 +23,7 @@ import io.DataOutEndpoint;
 import io.EndpointFactory;
 import serial.SerialAdapter;
 import serial.SerialManager;
+import ui.GuiAdapter;
 import web.NetworkAdapter;
 import web.NetworkManager;
 
@@ -36,8 +37,7 @@ public class SeedEndpointFactory implements EndpointFactory
         m_wsId = websockId;
     }
     /**
-     * Serial port
-     * @return
+     * @return serial port adapter
      */
     @Override
     public DataInEndpoint[] getDataInEndpoints() {
@@ -45,8 +45,7 @@ public class SeedEndpointFactory implements EndpointFactory
         return new DataInEndpoint[]{ serial };
     }
     /**
-     * Websocket, GUI
-     * @return
+     * @return network adapter, gui adapter
      */
     @Override
     public CmdInEndpoint[] getCmdInEndpoints() {
@@ -57,12 +56,11 @@ public class SeedEndpointFactory implements EndpointFactory
         catch (Exception e) {
             System.out.println(e.toString());
         }
-        // TODO: 29.09.2017 obtain GUI adapter
-        return new CmdInEndpoint[]{ net, null };
+        GuiAdapter gui = AppManager.getInstance().getAdapter();
+        return new CmdInEndpoint[]{ net, gui };
     }
     /**
-     * Websocket, GUI
-     * @return
+     * @return network adapter, gui adapter
      */
     @Override
     public DataOutEndpoint[] getDataOutEndpoints() {
@@ -73,12 +71,11 @@ public class SeedEndpointFactory implements EndpointFactory
         catch (Exception e) {
             System.out.println(e.toString());
         }
-        // TODO: 29.09.2017 obtain GUI adapter
-        return new DataOutEndpoint[]{ net, null };
+        GuiAdapter gui = AppManager.getInstance().getAdapter();
+        return new DataOutEndpoint[]{ net, gui };
     }
     /**
-     * Serial port
-     * @return
+     * @return Serial port adapter
      */
     @Override
     public CmdOutEndpoint[] getCmdOutEndpoints() {

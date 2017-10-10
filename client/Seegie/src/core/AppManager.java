@@ -14,14 +14,11 @@
  *    limitations under the License.
  */
 
-package ui;
+package core;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
-import com.jsoniter.JsonIterator;
-import com.jsoniter.output.JsonStream;
-import core.IOBroker;
 import io.CmdInEndpoint;
 import io.CmdOutEndpoint;
 import io.DataInEndpoint;
@@ -35,31 +32,34 @@ import javafx.stage.Stage;
 import models.BCICommand;
 import models.EEGData;
 import models.Serializer;
+import ui.GuiAdapter;
+import ui.GuiController;
 import web.NetworkAdapter;
 import web.NetworkManager;
 
 import java.util.Random;
 
-public class Main extends Application
+public class AppManager extends Application
 {
-    private GuiController m_controller;
+    private static AppManager s_instance = null;
+    public static AppManager getInstance() {
+        return s_instance;
+    }
 
+    private GuiAdapter m_adapter;
     private final IOBroker m_broker = new IOBroker();
 
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("sample.fxml"));
-        Parent root = loader.load();
-        m_controller = loader.getController();
-        primaryStage.setTitle("Hello World");
-        primaryStage.setScene(new Scene(root, 300, 275));
-        primaryStage.show();
+    public AppManager() {
+        super();
+        s_instance = this;
+    }
+    public GuiAdapter getAdapter() {
+        return m_adapter;
     }
     /**
-     * Sets up program mode (active/passive) depending on the factory type
-     * @param factory
+     * Sets up program mode (seed/leech) depending on the factory type, and starts the program
      */
-    public void setupMode(EndpointFactory factory) {
+    public void setMode(EndpointFactory factory) {
         m_broker.unregisterAll();
 
         DataInEndpoint[] dInEp = factory.getDataInEndpoints();
@@ -80,7 +80,26 @@ public class Main extends Application
         }
         m_broker.setupEndpoints();
     }
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("sample.fxml"));
+        Parent root = loader.load();
+        GuiController controller = (GuiController)loader.getController();
+        m_adapter = new GuiAdapter(controller, Settings.getGain());
 
+        primaryStage.setTitle("Seegie Client");
+        primaryStage.setScene(new Scene(root, 300, 275));
+        primaryStage.show();
+    }
+    public static void main(String[] args) {
+        Tests.networkTest();
+
+        launch(args);
+    }
+}
+
+final class Tests
+{
     static void networkTest() {
         NetworkManager man = NetworkManager.getInstance();
         try {
@@ -89,13 +108,14 @@ public class Main extends Application
             NetworkAdapter adapter = man.getAdapter(sessionId, true);
             adapter.addListener(cmd -> System.out.println("Cmd received: " + cmd.toString()));
             adapter.open();
-            for (; ; ) {
+            for (int sample = 0; true; ++sample) {
                 Random r = new Random();
                 byte[] raw = new byte[33];
                 r.nextBytes(raw);
                 raw[0] = (byte)0xA0;
                 raw[32] = (byte)(0xC3 & 0x000000FF);
                 EEGData d = new EEGData(raw);
+                d.sampleNum = sample;
 
                 adapter.sendData(d);
 //                System.out.println("Data sent successfully");
@@ -191,11 +211,5 @@ public class Main extends Application
         System.out.println("Sample number = " + d.sampleNum);
         System.out.println("Timestamp = " + d.timeStamp);
         System.out.println("Timestamp set = " + d.timeStampSet);
-    }
-
-    public static void main(String[] args) {
-        networkTest();
-
-        launch(args);
     }
 }

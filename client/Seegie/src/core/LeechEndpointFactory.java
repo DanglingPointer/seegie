@@ -21,6 +21,7 @@ import io.CmdOutEndpoint;
 import io.DataInEndpoint;
 import io.DataOutEndpoint;
 import io.EndpointFactory;
+import ui.GuiAdapter;
 import web.NetworkAdapter;
 import web.NetworkManager;
 
@@ -28,12 +29,11 @@ public class LeechEndpointFactory implements EndpointFactory
 {
     private final String m_wsId;
 
-    public LeechEndpointFactory(String websockId) {
-        m_wsId = websockId;
+    public LeechEndpointFactory(String wsSessionId) {
+        m_wsId = wsSessionId;
     }
     /**
-     * Websocket
-     * @return
+     * @return network adapter
      */
     @Override
     public DataInEndpoint[] getDataInEndpoints() {
@@ -47,26 +47,23 @@ public class LeechEndpointFactory implements EndpointFactory
         return new DataInEndpoint[]{ net };
     }
     /**
-     * GUI
-     * @return
+     * @return gui adapter
      */
     @Override
     public CmdInEndpoint[] getCmdInEndpoints() {
-        // TODO: 29.09.2017 obtain GUI adapter
-        return new CmdInEndpoint[0];
+        GuiAdapter gui = AppManager.getInstance().getAdapter();
+        return new CmdInEndpoint[]{ gui };
     }
     /**
-     * GUI
-     * @return
+     * @return gui adapter
      */
     @Override
     public DataOutEndpoint[] getDataOutEndpoints() {
-        // TODO: 29.09.2017 obtain GUI adapter
-        return new DataOutEndpoint[0];
+        GuiAdapter gui = AppManager.getInstance().getAdapter();
+        return new DataOutEndpoint[]{ gui };
     }
     /**
-     * Websocket
-     * @return
+     * @return network adapter
      */
     @Override
     public CmdOutEndpoint[] getCmdOutEndpoints() {
