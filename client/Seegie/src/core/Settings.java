@@ -35,7 +35,7 @@ public final class Settings
     static {
         try {
             // try read config
-            String path = NetworkManager.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath() + "\\config.txt";
+            String path = NetworkManager.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath() + "config.txt";
             FileInputStream fin = new FileInputStream(path);
             s_props.load(fin);
         }
@@ -45,7 +45,7 @@ public final class Settings
             s_props.setProperty(PROP_API_URL, "http://seegieapi.azurewebsites.net/");
             s_props.setProperty(PROP_GAIN, "24");
             try {
-                String path = NetworkManager.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath() + "\\config.txt";
+                String path = NetworkManager.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath() + "config.txt";
                 FileOutputStream fout = new FileOutputStream(path);
                 s_props.store(fout, "Default config");
             }

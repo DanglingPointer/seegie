@@ -28,3 +28,48 @@ http://docs.openbci.com/Hardware/03-Cyton_Data_Format
 
 http://docs.openbci.com/OpenBCI%20Software/04-OpenBCI_Cyton_SDK
 
+#### Data exchange formats
+
+* OpenBCI command:
+
+```
+{
+	"type": "&cmd&",
+	"content": "x3020011X"
+}
+```
+
+* info from OpenBCI:
+
+```
+{
+	"type": "&info&",
+	"content": "CHANNEL 2 IS ON$$$"
+}
+```
+
+* data from OpenBCI:
+
+```
+{
+	"type": "&data&",
+	"content": {
+		"sampleNum": 32,
+		"timeStamp": 0,
+		"channelData": [
+			-2049512,
+			-7245366,
+			306179,
+			1824337,
+			1796923,
+			-1367319,
+			1085662,
+			5156861
+		],
+		"acclX": -12505,
+		"acclY": 25934,
+		"acclZ": -10989,
+		"timeStampSet": false
+	}
+}
+```

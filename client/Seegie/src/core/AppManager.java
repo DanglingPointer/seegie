@@ -82,7 +82,7 @@ public class AppManager extends Application
     }
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("sample.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("../ui/sample.fxml"));
         Parent root = loader.load();
         GuiController controller = (GuiController)loader.getController();
         m_adapter = new GuiAdapter(controller, Settings.getGain());
@@ -92,7 +92,9 @@ public class AppManager extends Application
         primaryStage.show();
     }
     public static void main(String[] args) {
-        Tests.networkTest();
+
+        Tests.serializeCmdTest();
+        Tests.serializeDataTest();
 
         launch(args);
     }
