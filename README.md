@@ -1,4 +1,4 @@
-﻿## Sanntidsavlesing og distribuering av OpenBCI EEG-signaler
+## Sanntidsavlesing og distribuering av OpenBCI EEG-signaler
 #### (SEEGIE – Synchronized EEG Information Exchange)
 
 OpenBCI (open-source brain-computer interface) er et grensesnitt som blant annet inkluderer maskinvare for avlesning av elektriske hjernesignaler (EEG). Et spesielt designet kretskort mottar de avleste signalene. Disse kan videre sendes til en datamaskin ved å bruke seriell kommunikasjon eller bluetooth. Felles for disse kommunikasjonstypene er kort rekkevidde, noe som i praksis betyr at kun én datamaskin kan motta data samtidig, og denne datamaskinen må befinne seg like i nærheten av EEG-settet.
@@ -34,8 +34,8 @@ http://docs.openbci.com/OpenBCI%20Software/04-OpenBCI_Cyton_SDK
 
 ```
 {
-	"type": "&cmd&",
-	"content": "x3020011X"
+   "type": "&cmd&",
+   "content": "x3020011X"
 }
 ```
 
@@ -43,8 +43,8 @@ http://docs.openbci.com/OpenBCI%20Software/04-OpenBCI_Cyton_SDK
 
 ```
 {
-	"type": "&info&",
-	"content": "CHANNEL 2 IS ON$$$"
+   "type": "&info&",
+   "content": "CHANNEL 2 IS ON$$$"
 }
 ```
 
@@ -52,24 +52,24 @@ http://docs.openbci.com/OpenBCI%20Software/04-OpenBCI_Cyton_SDK
 
 ```
 {
-	"type": "&data&",
-	"content": {
-		"sampleNum": 32,
-		"timeStamp": 0,
-		"channelData": [
-			-2049512,
-			-7245366,
-			306179,
-			1824337,
-			1796923,
-			-1367319,
-			1085662,
-			5156861
-		],
-		"acclX": -12505,
-		"acclY": 25934,
-		"acclZ": -10989,
-		"timeStampSet": false
-	}
+   "type": "&data&",
+   "content": {
+      "sampleNum": 32,
+      "timeStamp": 0,
+      "channelData": [
+         -2049512,
+         -7245366,
+         306179,
+         1824337,
+         1796923,
+         -1367319,
+         1085662,
+         5156861
+      ],
+      "acclX": -12505,
+      "acclY": 25934,
+      "acclZ": -10989,
+      "timeStampSet": false
+   }
 }
 ```
