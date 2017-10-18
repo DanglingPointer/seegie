@@ -42,7 +42,7 @@ public class LeechEndpointFactory implements EndpointFactory
             net = NetworkManager.getInstance().getAdapter(m_wsId, false);
         }
         catch (Exception e) {
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
         return new DataInEndpoint[]{ net };
     }
@@ -72,7 +72,7 @@ public class LeechEndpointFactory implements EndpointFactory
             net = NetworkManager.getInstance().getAdapter(m_wsId, false);
         }
         catch (Exception e) {
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
         return new CmdOutEndpoint[]{ net };
     }

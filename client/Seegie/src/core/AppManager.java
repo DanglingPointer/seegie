@@ -26,8 +26,10 @@ import io.DataOutEndpoint;
 import io.EndpointFactory;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import models.BCICommand;
 import models.EEGData;
@@ -81,21 +83,28 @@ public class AppManager extends Application
         m_broker.setupEndpoints();
     }
     @Override
+    public void stop() throws Exception {
+        m_broker.unregisterAll();
+    }
+    @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("../ui/sample.fxml"));
+        FXMLLoader loader = new FXMLLoader(GuiController.class.getResource("sample.fxml"));
         Parent root = loader.load();
+        primaryStage.setScene(new Scene(root));
+
         GuiController controller = (GuiController)loader.getController();
         m_adapter = new GuiAdapter(controller, Settings.getGain());
 
+        Screen screen = Screen.getPrimary();
+        Rectangle2D bounds = screen.getVisualBounds();
+
+        primaryStage.setWidth(bounds.getWidth() * 0.75);
+        primaryStage.setHeight(bounds.getHeight() * 0.75);
+
         primaryStage.setTitle("Seegie Client");
-        primaryStage.setScene(new Scene(root, 300, 275));
         primaryStage.show();
     }
     public static void main(String[] args) {
-
-        Tests.serializeCmdTest();
-        Tests.serializeDataTest();
-
         launch(args);
     }
 }
@@ -126,7 +135,7 @@ final class Tests
 
         }
         catch (Exception e) {
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
     }
     static void serialTest() {
@@ -166,7 +175,6 @@ final class Tests
             System.out.println("COM2 open: " + com2.isOpen());
         }
         catch (Exception e) {
-            System.out.println(e.toString());
             e.printStackTrace();
         }
     }

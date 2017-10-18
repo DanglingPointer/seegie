@@ -54,7 +54,7 @@ public class SeedEndpointFactory implements EndpointFactory
             net = NetworkManager.getInstance().getAdapter(m_wsId, true);
         }
         catch (Exception e) {
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
         GuiAdapter gui = AppManager.getInstance().getAdapter();
         return new CmdInEndpoint[]{ net, gui };
@@ -69,7 +69,7 @@ public class SeedEndpointFactory implements EndpointFactory
             net = NetworkManager.getInstance().getAdapter(m_wsId, true);
         }
         catch (Exception e) {
-            System.out.println(e.toString());
+            e.printStackTrace();
         }
         GuiAdapter gui = AppManager.getInstance().getAdapter();
         return new DataOutEndpoint[]{ net, gui };

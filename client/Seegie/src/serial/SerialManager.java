@@ -42,6 +42,6 @@ public class SerialManager
             if (port.getSystemPortName().equals(portName))
                 return new SerialAdapter(port);
         }
-        return null;
+        throw new IllegalArgumentException("Illegal port name");
     }
 }

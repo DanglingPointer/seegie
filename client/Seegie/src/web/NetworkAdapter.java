@@ -108,7 +108,9 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
             if (!m_socket.isOpen())
                 m_socket.connectBlocking();
         }
-        catch (Exception e) {}
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     @Override
     public void close() {
