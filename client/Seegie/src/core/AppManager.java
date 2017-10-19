@@ -88,7 +88,7 @@ public class AppManager extends Application
     }
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(GuiController.class.getResource("sample.fxml"));
+        FXMLLoader loader = new FXMLLoader(GuiController.class.getResource("layout.fxml"));
         Parent root = loader.load();
         primaryStage.setScene(new Scene(root));
 

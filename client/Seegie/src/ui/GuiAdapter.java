@@ -89,10 +89,11 @@ public class GuiAdapter implements CmdInEndpoint, DataOutEndpoint
     }
     @Override
     public void open() {
-
+        m_gui.clearData();
+        m_gui.startGraph();
     }
     @Override
     public void close() {
-        m_gui.clearData();
+        m_gui.stopGraph();
     }
 }

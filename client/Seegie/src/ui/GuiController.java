@@ -16,6 +16,8 @@
 
 package ui;
 
+import core.Settings;
+import javafx.animation.AnimationTimer;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
@@ -25,15 +27,25 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.chart.AreaChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import models.BCICommand;
 import models.DataUnitsAdapter;
+import models.EEGData;
+import serial.SerialManager;
 
 import java.net.URL;
+import java.util.Random;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 public class GuiController implements Initializable
 {
@@ -45,15 +57,22 @@ public class GuiController implements Initializable
     }
 
     private Listener m_listener; // NB! Remember nullcheck before calling methods on it!
+    private Boolean m_seedMode = null;
+
+    private final int                                     MAX_X_POINTS = 100;
+    private final ConcurrentLinkedQueue<DataUnitsAdapter> m_dataQ      = new ConcurrentLinkedQueue<>();
+    private AnimationTimer m_timer;
 
     @FXML
-    private TextField m_connectField;
+    private GridPane  m_graphPane;
     @FXML
-    private AreaChart m_graph;
+    private TextField m_connectField;
     @FXML
     private Label     m_status;
     @FXML
     private TextArea  m_infoText;
+    @FXML
+    private Label     m_connectLabel;
 
     public void setListener(Listener listener) {
         m_listener = listener;
@@ -61,51 +80,103 @@ public class GuiController implements Initializable
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
+        // Remove focus from the connect field upon startup
         final BooleanProperty firstTime = new SimpleBooleanProperty(true);
-        m_connectField.focusedProperty().addListener(new ChangeListener<Boolean>()
-        {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if (firstTime.get()) {
-                    m_graph.requestFocus();
-                    firstTime.setValue(false);
-                }
+        m_connectField.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (firstTime.get()) {
+                m_graphPane.requestFocus();
+                firstTime.setValue(false);
             }
         });
 
-//        m_gridRoot.add(createTestChart(), 0, 0);
+        // setting up data chart
+        NumberAxis xAxis = new NumberAxis(0, MAX_X_POINTS, MAX_X_POINTS / 10);
+        xAxis.setForceZeroInRange(false);
+        xAxis.setAutoRanging(false);
+//        xAxis.setTickLabelsVisible(false);
+//        xAxis.setTickMarkVisible(false);
+//        xAxis.setMinorTickVisible(false);
 
-        // Series data of 2014
-        XYChart.Series<Number, Number> series2014 = new XYChart.Series<Number, Number>();
-        series2014.setName("2014");
-        series2014.getData().add(new XYChart.Data<Number, Number>(1, 400));
-        series2014.getData().add(new XYChart.Data<Number, Number>(3, 1000));
-        series2014.getData().add(new XYChart.Data<Number, Number>(4, 1500));
-        series2014.getData().add(new XYChart.Data<Number, Number>(5, 800));
-        series2014.getData().add(new XYChart.Data<Number, Number>(7, 500));
-        series2014.getData().add(new XYChart.Data<Number, Number>(8, 1800));
-        series2014.getData().add(new XYChart.Data<Number, Number>(10, 1500));
-        series2014.getData().add(new XYChart.Data<Number, Number>(12, 1300));
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setAutoRanging(true);
 
-        // Series data of 2015
-        XYChart.Series<Number, Number> series2015 = new XYChart.Series<Number, Number>();
-        series2015.setName("2015");
-        series2015.getData().add(new XYChart.Data<Number, Number>(1, 2000));
-        series2015.getData().add(new XYChart.Data<Number, Number>(3, 1500));
-        series2015.getData().add(new XYChart.Data<Number, Number>(4, 1300));
-        series2015.getData().add(new XYChart.Data<Number, Number>(5, 1200));
-        series2015.getData().add(new XYChart.Data<Number, Number>(7, 1400));
-        series2015.getData().add(new XYChart.Data<Number, Number>(8, 1080));
-        series2015.getData().add(new XYChart.Data<Number, Number>(10, 2050));
-        series2015.getData().add(new XYChart.Data<Number, Number>(12, 2005));
+        AreaChart<Number, Number> graph = new AreaChart<Number, Number>(xAxis, yAxis)
+        {
+            @Override
+            protected void dataItemAdded(Series<Number, Number> series, int itemIndex, Data<Number, Number> item) { /*empty for performance */}
+        };
+        graph.setAnimated(false);
+        graph.setTitle("EEG data");
 
-        m_graph.getData().addAll(series2014, series2015);
+        AreaChart.Series<Number, Number> series = new AreaChart.Series<Number, Number>();
+        graph.getData().add(series);
+
+        m_graphPane.add(graph, 0, 0);
+
+        m_timer = new AnimationTimer()
+        {
+            @Override
+            public void handle(long now) {
+                if (m_dataQ.isEmpty())
+                    return;
+
+                DataUnitsAdapter dataPoint = m_dataQ.remove();
+                series.getData().add(new AreaChart.Data(dataPoint.getSampleNumber(), dataPoint.getVoltsData()[0]));
+
+                int seriesLength = series.getData().size();
+                if (seriesLength > MAX_X_POINTS) {
+                    series.getData().remove(0, seriesLength - MAX_X_POINTS);
+                    xAxis.setLowerBound((int)series.getData().get(0).getXValue());
+                    xAxis.setUpperBound(dataPoint.getSampleNumber());
+                }
+            }
+        };
+
+        startGraph(); // temp
+    }
+    public void startGraph() {
+        // BEGIN TEMP
+        ExecutorService executor = Executors.newCachedThreadPool(r -> {
+            Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            return thread;
+        });
+        executor.execute(() -> {
+            try {
+                int gain = Settings.getGain();
+                for (int sample = 0; true; ++sample) {
+
+                    Random r = new Random();
+                    byte[] raw = new byte[33];
+                    r.nextBytes(raw);
+                    raw[0] = (byte)0xA0;
+                    raw[32] = (byte)(0xC3 & 0x000000FF);
+                    EEGData d = new EEGData(raw);
+                    d.sampleNum = sample;
+
+                    m_dataQ.add(new DataUnitsAdapter(d, gain));
+                    Thread.sleep(2);
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        // END TEMP
+
+        if (m_timer != null)
+            m_timer.start();
+    }
+    public void stopGraph() {
+        if (m_timer != null)
+            m_timer.stop();
     }
     public void updateData(DataUnitsAdapter data) {
-
+        m_dataQ.add(data);
     }
     public void clearData() {
-
+        AreaChart<Number, Number> graph = (AreaChart<Number, Number>)m_graphPane.getChildren().get(0);
+        graph.getData().clear();
     }
     public void showInfo(String info) {
         m_infoText.setText(info);
@@ -114,67 +185,66 @@ public class GuiController implements Initializable
      * Connect-button handler
      */
     public void onConnectPressed() {
-        m_status.setText("Connecting...");
-
-        // TODO: 18.10.2017
+        if (m_seedMode == null) {
+            m_status.setText("Error: mode not chosen");
+            return;
+        }
+        if (m_listener != null) {
+            String input = m_connectField.getText();
+            if (m_seedMode)
+                m_listener.onSeedModeSet(input);
+            else
+                m_listener.onLeechModeSet(input);
+            m_status.setText("Connected");
+        }
+        m_status.setText("Error connecting");
     }
     /**
      * Menu radio check item handler
      */
     public void onSeedModeSelected() {
-        m_connectField.setPromptText("Enter session id...");
+        m_connectField.setPromptText("Enter serial port name...");
         m_status.setText("Mode: seed");
-        if (m_listener != null) {
-            m_listener.onSeedModeSet(m_connectField.getText());
-        }
+
+        String[] ports = SerialManager.getInstance().getPorts();
+        m_connectLabel.setText("Ports: " + String.join(", ", ports));
+
+        m_seedMode = true;
     }
     /**
      * Menu radio check item handler
      */
     public void onLeechModeSelected() {
-        m_connectField.setPromptText("Enter serial port name...");
+        m_connectField.setPromptText("Enter session id...");
         m_status.setText("Mode: leech");
+        m_connectLabel.setText("");
+
+        m_seedMode = false;
+    }
+    /**
+     * Start button handler
+     */
+    public void onStartPressed() {
+        sendCommand(BCICommand.START_STREAM);
+    }
+    /**
+     * Stop button handler
+     */
+    public void onStopPressed() {
+        sendCommand(BCICommand.START_STREAM);
+    }
+    /**
+     * Reset handler button
+     */
+    public void onResetPressed() {
+//        clearData();
+        sendCommand(BCICommand.RESET);
+    }
+    private void sendCommand(char simpleCmd) {
+        BCICommand.Builder b = new BCICommand.Builder();
+        BCICommand cmd = b.addSimpleCmd(simpleCmd).build();
         if (m_listener != null) {
-            m_listener.onLeechModeSet(m_connectField.getText());
+            m_listener.onCommandCalled(cmd);
         }
     }
-//    /**
-//     * Chart test
-//     */
-//    private AreaChart<Number, Number> createTestChart() {
-//        final NumberAxis xAxis = new NumberAxis(1, 12, 1);
-//        final NumberAxis yAxis = new NumberAxis();
-//        final AreaChart<Number, Number> areaChart = new AreaChart<Number, Number>(xAxis, yAxis);
-//        areaChart.setTitle("Revenue");
-//
-//        areaChart.setLegendSide(Side.LEFT);
-//
-//        // Series data of 2014
-//        XYChart.Series<Number, Number> series2014 = new XYChart.Series<Number, Number>();
-//        series2014.setName("2014");
-//        series2014.getData().add(new XYChart.Data<Number, Number>(1, 400));
-//        series2014.getData().add(new XYChart.Data<Number, Number>(3, 1000));
-//        series2014.getData().add(new XYChart.Data<Number, Number>(4, 1500));
-//        series2014.getData().add(new XYChart.Data<Number, Number>(5, 800));
-//        series2014.getData().add(new XYChart.Data<Number, Number>(7, 500));
-//        series2014.getData().add(new XYChart.Data<Number, Number>(8, 1800));
-//        series2014.getData().add(new XYChart.Data<Number, Number>(10, 1500));
-//        series2014.getData().add(new XYChart.Data<Number, Number>(12, 1300));
-//
-//        // Series data of 2015
-//        XYChart.Series<Number, Number> series2015 = new XYChart.Series<Number, Number>();
-//        series2015.setName("2015");
-//        series2015.getData().add(new XYChart.Data<Number, Number>(1, 2000));
-//        series2015.getData().add(new XYChart.Data<Number, Number>(3, 1500));
-//        series2015.getData().add(new XYChart.Data<Number, Number>(4, 1300));
-//        series2015.getData().add(new XYChart.Data<Number, Number>(5, 1200));
-//        series2015.getData().add(new XYChart.Data<Number, Number>(7, 1400));
-//        series2015.getData().add(new XYChart.Data<Number, Number>(8, 1080));
-//        series2015.getData().add(new XYChart.Data<Number, Number>(10, 2050));
-//        series2015.getData().add(new XYChart.Data<Number, Number>(12, 2005));
-//
-//        areaChart.getData().addAll(series2014, series2015);
-//
-//        return areaChart;
-//    }
 }
