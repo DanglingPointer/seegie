@@ -39,6 +39,7 @@ import ui.GuiController;
 import web.NetworkAdapter;
 import web.NetworkManager;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 public class AppManager extends Application
@@ -106,6 +107,8 @@ public class AppManager extends Application
     }
     public static void main(String[] args) {
         launch(args);
+
+//        Tests.serialBciTest();
     }
 }
 
@@ -137,6 +140,63 @@ final class Tests
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    static void serialBciTest() {
+        SerialPort[] ports = SerialPort.getCommPorts();
+        SerialPort p = ports[0];
+
+        System.out.println(p.getSystemPortName());
+
+        p.addDataListener(new SerialPortDataListener()
+        {
+            @Override
+            public int getListeningEvents() {
+                return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+            }
+            @Override
+            public void serialEvent(SerialPortEvent serialPortEvent) {
+                byte[] data = new byte[p.bytesAvailable()];
+                p.readBytes(data, data.length);
+                String message1 = new String(data/*, StandardCharsets.UTF_8*/);
+                String message2 = new String(data, StandardCharsets.UTF_8);
+                String message3 = new String(data, StandardCharsets.US_ASCII);
+                System.out.println("Serial message: " + message1);
+                System.out.println("Serial message: " + message2);
+                System.out.println("Serial message: " + message3 + "\n---");
+            }
+        });
+        p.setBaudRate(115200);
+        p.openPort();
+
+        BCICommand.Builder b = new BCICommand.Builder();
+        b.addSimpleCmd(BCICommand.REGS_SETTINGS_QUERY);
+        byte[] data = b.build().getBytes();
+
+        try {
+            System.out.println("Sleeping for 2 sec");
+            Thread.sleep(2000);
+            System.out.println("Done sleeping");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        String v = "b";
+        byte[] data1 = v.getBytes(StandardCharsets.US_ASCII);
+        System.out.println("Data1 length = " + data1.length);
+
+        p.writeBytes(data1, data1.length);
+
+
+        try {
+            System.out.println("Sleeping for 5 sec");
+            Thread.sleep(50000);
+            System.out.println("Done sleeping");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        p.closePort();
     }
     static void serialTest() {
         try {
