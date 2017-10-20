@@ -26,6 +26,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -40,6 +41,8 @@ import models.EEGData;
 import serial.SerialManager;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -62,8 +65,7 @@ public class GuiController implements Initializable
     private final ConcurrentLinkedQueue<DataUnitsAdapter> m_dataQ = new ConcurrentLinkedQueue<>();
     private AnimationTimer m_timer;
 
-
-    private final int  MAX_X_POINTS = 500;
+    private final int  MAX_X_POINTS = 1000;
     private       long m_currentX   = 0;
 
     @FXML
@@ -92,28 +94,33 @@ public class GuiController implements Initializable
             }
         });
 
-        // setting up data chart
-        NumberAxis xAxis = new NumberAxis(0, MAX_X_POINTS, MAX_X_POINTS / 50);
-        xAxis.setForceZeroInRange(false);
-        xAxis.setAutoRanging(false);
-        xAxis.setTickLabelsVisible(false);
-        xAxis.setTickMarkVisible(false);
-        xAxis.setMinorTickVisible(false);
+        List<AreaChart<Number, Number>> charts = new ArrayList<>();
+        for (int row = 0; row < 8; ++row) {
+            // setting up data chart
+            NumberAxis xAxis = new NumberAxis(0, MAX_X_POINTS, MAX_X_POINTS / 50);
+            xAxis.setForceZeroInRange(false);
+            xAxis.setAutoRanging(false);
+            xAxis.setTickLabelsVisible(false);
+            xAxis.setTickMarkVisible(false);
+            xAxis.setMinorTickVisible(false);
 
-        NumberAxis yAxis = new NumberAxis();
-        yAxis.setAutoRanging(true);
+            NumberAxis yAxis = new NumberAxis();
+            yAxis.setAutoRanging(true);
 
-        final AreaChart<Number, Number> graph = new AreaChart<>(xAxis, yAxis)
-        {
-            @Override
-            protected void dataItemAdded(Series<Number, Number> series, int itemIndex, Data<Number, Number> item) { /*empty for performance */}
-        };
-        graph.setAnimated(false);
-        graph.setTitle("EEG data");
+            final AreaChart<Number, Number> graph = new AreaChart<>(xAxis, yAxis)
+            {
+                @Override
+                protected void dataItemAdded(Series<Number, Number> series, int itemIndex, Data<Number, Number> item) { /*empty for performance */}
+            };
+            graph.setAnimated(false);
+            graph.setTitle("Channel " + (row + 1));
 
-        final AreaChart.Series<Number, Number> series = new AreaChart.Series<>();
-        graph.getData().add(series);
-        m_graphPane.add(graph, 0, 0);
+            final AreaChart.Series<Number, Number> series = new AreaChart.Series<>();
+            graph.getData().add(series);
+            m_graphPane.add(graph, 0, row);
+
+            charts.add(graph);
+        }
 
         m_timer = new AnimationTimer()
         {
@@ -123,18 +130,29 @@ public class GuiController implements Initializable
                     return;
 
                 for (int i = 0; i < 100; ++i) {
+
                     if (m_dataQ.isEmpty())
                         break;
+
                     DataUnitsAdapter dataPoint = m_dataQ.remove();
-                    series.getData().add(new AreaChart.Data(/*dataPoint.getSampleNumber()*/m_currentX++, dataPoint.getVoltsData()[0]));
+
+                    int channel = 0;
+                    for (AreaChart<Number, Number> graph : charts) {
+                        AreaChart.Series<Number, Number> series = graph.getData().get(0);
+                        series.getData().add(new AreaChart.Data(m_currentX, dataPoint.getVoltsData()[channel++]));
+                    }
+                    m_currentX++;
                 }
 
-                int seriesLength = series.getData().size();
-                if (seriesLength > MAX_X_POINTS) {
-                    series.getData().remove(0, seriesLength - MAX_X_POINTS);
-
-                    xAxis.setLowerBound((long)series.getData().get(0).getXValue());
-                    xAxis.setUpperBound(m_currentX - 1);
+                for (AreaChart<Number, Number> graph : charts) {
+                    AreaChart.Series<Number, Number> series = graph.getData().get(0);
+                    NumberAxis xAxis = (NumberAxis)graph.getXAxis();
+                    int seriesLength = series.getData().size();
+                    if (seriesLength > MAX_X_POINTS) {
+                        series.getData().remove(0, seriesLength - MAX_X_POINTS);
+                        xAxis.setLowerBound((long)series.getData().get(0).getXValue());
+                        xAxis.setUpperBound(m_currentX - 1);
+                    }
                 }
             }
         };
@@ -151,13 +169,16 @@ public class GuiController implements Initializable
         m_dataQ.add(data);
     }
     public void clearData() {
-        AreaChart<Number, Number> graph = (AreaChart<Number, Number>)m_graphPane.getChildren().get(0);
-        AreaChart.Series<Number, Number> series = graph.getData().get(0);
-        series.getData().clear();
+        for (Node child : m_graphPane.getChildren()) {
+            AreaChart<Number, Number> graph = (AreaChart<Number, Number>)child;
+            AreaChart.Series<Number, Number> series = graph.getData().get(0);
+            series.getData().clear();
+        }
         m_currentX = 0;
     }
     public void showInfo(String info) {
-        m_infoText.setText(m_infoText.getText() + info);
+        String infoToShow = /*m_infoText.getText().length() > 500 ? info : */m_infoText.getText() + info;
+        m_infoText.setText(infoToShow);
     }
     /**
      * Connect-button handler
@@ -168,6 +189,7 @@ public class GuiController implements Initializable
             return;
         }
         if (m_listener != null) {
+            m_infoText.setText("");
             String input = m_connectField.getText();
             if (m_seedMode)
                 m_listener.onSeedModeSet(input);
@@ -217,7 +239,6 @@ public class GuiController implements Initializable
      * Reset handler button
      */
     public void onResetPressed() {
-//        clearData();
         sendCommand(BCICommand.RESET);
     }
     private void sendCommand(char simpleCmd) {

@@ -99,8 +99,8 @@ public class AppManager extends Application
         Screen screen = Screen.getPrimary();
         Rectangle2D bounds = screen.getVisualBounds();
 
-        primaryStage.setWidth(bounds.getWidth() * 0.75);
-        primaryStage.setHeight(bounds.getHeight() * 0.75);
+        primaryStage.setWidth(bounds.getWidth() /* * 0.75*/);
+        primaryStage.setHeight(bounds.getHeight() /* * 0.75*/);
 
         primaryStage.setTitle("Seegie Client");
         primaryStage.show();

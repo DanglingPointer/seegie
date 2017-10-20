@@ -37,7 +37,9 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.GuiController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+            prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ui.GuiController">
     <top>
         <VBox prefWidth="100.0" BorderPane.alignment="CENTER">
             <children>
@@ -45,86 +47,97 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="File">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="Close" />
+                                <RadioMenuItem mnemonicParsing="false" onAction="#onSeedModeSelected" text="Seed mode">
+                                    <toggleGroup>
+                                        <ToggleGroup fx:id="mode"/>
+                                    </toggleGroup>
+                                </RadioMenuItem>
+                                <RadioMenuItem mnemonicParsing="false" onAction="#onLeechModeSelected" text="Leech mode"
+                                               toggleGroup="$mode"/>
+                                <MenuItem mnemonicParsing="false" text="Close"/>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Edit">
                             <items>
-                        <RadioMenuItem mnemonicParsing="false" onAction="#onSeedModeSelected" text="Seed mode">
-                           <toggleGroup>
-                              <ToggleGroup fx:id="mode" />
-                           </toggleGroup>
-                        </RadioMenuItem>
-                        <RadioMenuItem mnemonicParsing="false" onAction="#onLeechModeSelected" text="Leech mode" toggleGroup="$mode" />
+                                <MenuItem mnemonicParsing="false" text="Close"/>
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="Help">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="About" />
+                                <MenuItem mnemonicParsing="false" text="About"/>
                             </items>
                         </Menu>
                     </menus>
                 </MenuBar>
                 <HBox spacing="10.0">
                     <children>
-                  <Label fx:id="m_connectLabel" wrapText="true" />
-                  <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="m_connectLabel" wrapText="true"/>
+                        <Region HBox.hgrow="ALWAYS"/>
                         <TextField fx:id="m_connectField" prefHeight="25.0" prefWidth="206.0">
-                     <effect>
-                        <Lighting>
-                           <bumpInput>
-                              <Shadow />
-                           </bumpInput>
-                           <light>
-                              <Light.Distant />
-                           </light>
-                        </Lighting>
-                     </effect></TextField>
-                        <Button mnemonicParsing="false" onAction="#onConnectPressed" text="Connect" />
+                            <effect>
+                                <Lighting>
+                                    <bumpInput>
+                                        <Shadow/>
+                                    </bumpInput>
+                                    <light>
+                                        <Light.Distant/>
+                                    </light>
+                                </Lighting>
+                            </effect>
+                        </TextField>
+                        <Button mnemonicParsing="false" onAction="#onConnectPressed" text="Connect"/>
                     </children>
                     <VBox.margin>
-                        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+                        <Insets bottom="8.0" left="8.0" right="8.0" top="8.0"/>
                     </VBox.margin>
                 </HBox>
             </children>
         </VBox>
     </top>
-   <left>
-      <VBox alignment="TOP_CENTER" minWidth="-Infinity" prefHeight="291.0" prefWidth="235.0" spacing="5.0" BorderPane.alignment="CENTER">
-         <children>
-            <Button mnemonicParsing="false" onAction="#onStartPressed" text="Start" />
-            <Button mnemonicParsing="false" onAction="#onStopPressed" text="Stop" />
-            <Button mnemonicParsing="false" onAction="#onResetPressed" text="Reset" />
-            <TextArea fx:id="m_infoText" editable="false" minHeight="-Infinity" VBox.vgrow="ALWAYS" />
-         </children>
-         <BorderPane.margin>
-            <Insets bottom="10.0" left="10.0" top="10.0" />
-         </BorderPane.margin>
-         <padding>
-            <Insets bottom="10.0" left="10.0" top="10.0" />
-         </padding>
-      </VBox>
-   </left>
-   <bottom>
-      <HBox fillHeight="false" BorderPane.alignment="CENTER">
-         <children>
-            <Label fx:id="m_status" text="Label" />
-         </children>
-         <BorderPane.margin>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-         </BorderPane.margin>
-      </HBox>
-   </bottom>
-   <center>
-      <GridPane fx:id="m_graphPane" BorderPane.alignment="CENTER">
-        <columnConstraints>
-          <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
-        </columnConstraints>
-        <rowConstraints>
-          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS" />
-        </rowConstraints>
-      </GridPane>
-   </center>
+    <left>
+        <VBox alignment="TOP_CENTER" minWidth="-Infinity" prefHeight="291.0" prefWidth="235.0" spacing="5.0"
+              BorderPane.alignment="CENTER">
+            <children>
+                <Button mnemonicParsing="false" onAction="#onStartPressed" text="Start"/>
+                <Button mnemonicParsing="false" onAction="#onStopPressed" text="Stop"/>
+                <Button mnemonicParsing="false" onAction="#onResetPressed" text="Reset"/>
+                <TextArea fx:id="m_infoText" editable="false" minHeight="-Infinity" VBox.vgrow="ALWAYS"/>
+            </children>
+            <BorderPane.margin>
+                <Insets bottom="10.0" left="10.0" top="10.0"/>
+            </BorderPane.margin>
+            <padding>
+                <Insets bottom="10.0" left="10.0" top="10.0"/>
+            </padding>
+        </VBox>
+    </left>
+    <bottom>
+        <HBox fillHeight="false" BorderPane.alignment="CENTER">
+            <children>
+                <Label fx:id="m_status" text="Label"/>
+            </children>
+            <BorderPane.margin>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+            </BorderPane.margin>
+        </HBox>
+    </bottom>
+    <center>
+        <GridPane fx:id="m_graphPane" BorderPane.alignment="CENTER">
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0"/>
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES"/>
+                <RowConstraints minHeight="5.0" prefHeight="5.0" vgrow="SOMETIMES"/>
+            </rowConstraints>
+        </GridPane>
+    </center>
 
 
 </BorderPane>

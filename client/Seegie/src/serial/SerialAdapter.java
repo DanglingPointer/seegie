@@ -31,6 +31,69 @@ import java.util.Set;
 
 public class SerialAdapter implements DataInEndpoint, CmdOutEndpoint
 {
+    private abstract class SerialListener
+    {
+        protected void parseData(byte[] data) {
+            try {
+                EEGData values = new EEGData(data);
+                System.out.println("Serial data received");
+                for (DataInEndpoint.Listener l : m_listeners) {
+                    l.onDataReceived(values);
+                }
+            }
+            catch (IllegalArgumentException e) {
+                String message = new String(data, StandardCharsets.UTF_8);
+                System.out.println("Serial message received");
+                for (DataInEndpoint.Listener l : m_listeners) {
+                    l.onInfoReceived(message);
+                }
+            }
+        }
+    }
+    private class DataPacketListener extends SerialListener implements SerialPortPacketListener
+    {
+        @Override
+        public int getPacketSize() {
+            return PACKET_LENGTH;
+        }
+        @Override
+        public int getListeningEvents() {
+            return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
+        }
+        @Override
+        public void serialEvent(SerialPortEvent serialPortEvent) {
+            if (serialPortEvent.getEventType() != SerialPort.LISTENING_EVENT_DATA_RECEIVED)
+                return;
+
+            byte[] data = serialPortEvent.getReceivedData();
+            parseData(data);
+        }
+    }
+    private class InfoStreamListener extends SerialListener implements SerialPortDataListener
+    {
+        @Override
+        public int getListeningEvents() {
+            return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+        }
+        @Override
+        public void serialEvent(SerialPortEvent serialPortEvent) {
+            if (serialPortEvent.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
+                return;
+
+            byte[] data = new byte[m_port.bytesAvailable()];
+            int readCount = m_port.readBytes(data, data.length);
+
+            for (int pos = 0; pos < readCount; pos += PACKET_LENGTH) {
+                byte[] packet = new byte[PACKET_LENGTH];
+
+                int bytesToCopy = Math.min(PACKET_LENGTH, readCount - pos);
+                System.arraycopy(data, pos, packet, 0, bytesToCopy);
+
+                parseData(packet);
+            }
+        }
+    }
+
     private final SerialPort                   m_port;
     private final Set<DataInEndpoint.Listener> m_listeners;
     private final int PACKET_LENGTH = 33;
@@ -38,90 +101,22 @@ public class SerialAdapter implements DataInEndpoint, CmdOutEndpoint
     SerialAdapter(SerialPort port) {
         m_port = port;
         m_listeners = new HashSet<>();
-//        m_port.addDataListener(new SerialPortDataListener()
-//        {
-//            @Override
-//            public int getListeningEvents() {
-//                return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
-//            }
-//            @Override
-//            public void serialEvent(SerialPortEvent serialPortEvent) {
-//                System.out.println("Serial event " + serialPortEvent.getEventType());
-//                System.out.println("Bytes available " + m_port.bytesAvailable());
-//
-//                if (serialPortEvent.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
-//                    return;
-//
-//                byte[] data = new byte[m_port.bytesAvailable()];
-//                int readCount = m_port.readBytes(data, data.length);
-//
-//                System.out.println("Data length is " + data.length);
-//                System.out.println("Read count is " + readCount);
-//
-//                for (int pos = 0; pos < readCount; pos += PACKET_LENGTH) {
-//                    byte[] packet = new byte[PACKET_LENGTH];
-//
-//                    int bytesToCopy = Math.min(PACKET_LENGTH, readCount-pos);
-//                    System.arraycopy(data, pos, packet, 0, bytesToCopy);
-//
-//                    try {
-//                        EEGData values = new EEGData(packet);
-//                        System.out.println("Serial data received");
-//                        for (DataInEndpoint.Listener l : m_listeners) {
-//                            l.onDataReceived(values);
-//                        }
-//                    }
-//                    catch (IllegalArgumentException e) {
-//                        String message = new String(packet, StandardCharsets.UTF_8);
-//                        System.out.println("Serial message received");
-//                        for (DataInEndpoint.Listener l : m_listeners) {
-//                            l.onInfoReceived(message);
-//                        }
-//                    }
-//                }
-//
-//            }
-//        });
 
-        m_port.addDataListener(new SerialPortPacketListener()
-        {
-            @Override
-            public int getPacketSize() {
-                return PACKET_LENGTH;
-            }
-            @Override
-            public int getListeningEvents() {
-                return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
-            }
-            @Override
-            public void serialEvent(SerialPortEvent serialPortEvent) {
-                if (serialPortEvent.getEventType() != SerialPort.LISTENING_EVENT_DATA_RECEIVED)
-                    return;
-
-                byte[] data = serialPortEvent.getReceivedData();
-
-                try {
-                    EEGData values = new EEGData(data);
-                    System.out.println("Serial data received");
-                    for (DataInEndpoint.Listener l : m_listeners) {
-                        l.onDataReceived(values);
-                    }
-                }
-                catch (IllegalArgumentException e) {
-                    String message = new String(data, StandardCharsets.UTF_8);
-                    System.out.println("Serial message: " + message);
-                    for (DataInEndpoint.Listener l : m_listeners) {
-                        l.onInfoReceived(message);
-                    }
-                }
-            }
-        });
     }
     public String getPortName() {
         return m_port.getSystemPortName();
     }
     @Override
     public void sendCmd(BCICommand cmd) {
+        if (cmd.toString().equals(BCICommand.START_STREAM + "")) {
+            m_port.removeDataListener();
+            m_port.addDataListener(new DataPacketListener());
+        }
+        else if (cmd.toString().equals(BCICommand.STOP_STREAM + "")) {
+            m_port.removeDataListener();
+            m_port.addDataListener(new InfoStreamListener());
+        }
+
         byte[] data = cmd.getBytes();
         m_port.writeBytes(data, data.length);
         System.out.println("Command send to serial port");
@@ -132,11 +127,13 @@ public class SerialAdapter implements DataInEndpoint, CmdOutEndpoint
     }
     @Override
     public void unregisterListeners() {
-        m_listeners.clear(); // do NOT remove listener from m_port!
+        m_listeners.clear();
     }
     @Override
     public void open() {
         m_port.setBaudRate(115200);
+        m_port.removeDataListener();
+        m_port.addDataListener(new InfoStreamListener());
         m_port.openPort();
         System.out.println("Serial port opened");
     }
