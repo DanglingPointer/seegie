@@ -65,8 +65,8 @@ public class GuiController implements Initializable
     private final ConcurrentLinkedQueue<DataUnitsAdapter> m_dataQ = new ConcurrentLinkedQueue<>();
     private AnimationTimer m_timer;
 
-    private final int  MAX_X_POINTS = 1000;
-    private       long m_currentX   = 0;
+    private static final int  MAX_X_POINTS = 1000;
+    private              long m_currentX   = 0;
 
     @FXML
     private GridPane  m_graphPane;
@@ -94,6 +94,7 @@ public class GuiController implements Initializable
             }
         });
 
+        // create and setup 8 charts
         List<AreaChart<Number, Number>> charts = new ArrayList<>();
         for (int row = 0; row < 8; ++row) {
             // setting up data chart
@@ -177,7 +178,7 @@ public class GuiController implements Initializable
         m_currentX = 0;
     }
     public void showInfo(String info) {
-        String infoToShow = /*m_infoText.getText().length() > 500 ? info : */m_infoText.getText() + info;
+        String infoToShow = m_infoText.getText() + info;
         m_infoText.setText(infoToShow);
     }
     /**
@@ -205,6 +206,7 @@ public class GuiController implements Initializable
      * Menu radio check item handler
      */
     public void onSeedModeSelected() {
+        m_connectField.setText("");
         m_connectField.setPromptText("Enter serial port name...");
         m_status.setText("Mode: seed");
 
@@ -217,6 +219,7 @@ public class GuiController implements Initializable
      * Menu radio check item handler
      */
     public void onLeechModeSelected() {
+        m_connectField.setText("");
         m_connectField.setPromptText("Enter session id...");
         m_status.setText("Mode: leech");
         m_connectLabel.setText("");
