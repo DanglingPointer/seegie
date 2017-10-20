@@ -29,6 +29,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import models.BCICommand;
@@ -88,10 +89,11 @@ public class AppManager extends Application
         m_broker.unregisterAll();
     }
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(GuiController.class.getResource("layout.fxml"));
         Parent root = loader.load();
-        primaryStage.setScene(new Scene(root));
+        stage.setScene(new Scene(root));
+        stage.getIcons().add(new Image(GuiController.class.getResourceAsStream("black-icon-eeg.png")));
 
         GuiController controller = (GuiController)loader.getController();
         m_adapter = new GuiAdapter(controller, Settings.getGain());
@@ -99,16 +101,14 @@ public class AppManager extends Application
         Screen screen = Screen.getPrimary();
         Rectangle2D bounds = screen.getVisualBounds();
 
-        primaryStage.setWidth(bounds.getWidth() /* * 0.75*/);
-        primaryStage.setHeight(bounds.getHeight() /* * 0.75*/);
+        stage.setWidth(bounds.getWidth()  * 0.5);
+        stage.setHeight(bounds.getHeight());
 
-        primaryStage.setTitle("Seegie Client");
-        primaryStage.show();
+        stage.setTitle("Seegie Client");
+        stage.show();
     }
     public static void main(String[] args) {
         launch(args);
-
-//        Tests.serialBciTest();
     }
 }
 

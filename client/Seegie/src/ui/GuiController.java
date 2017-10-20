@@ -16,39 +16,29 @@
 
 package ui;
 
-import core.Settings;
 import javafx.animation.AnimationTimer;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
 import models.BCICommand;
 import models.DataUnitsAdapter;
-import models.EEGData;
 import serial.SerialManager;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 public class GuiController implements Initializable
 {
@@ -104,6 +94,7 @@ public class GuiController implements Initializable
             xAxis.setTickLabelsVisible(false);
             xAxis.setTickMarkVisible(false);
             xAxis.setMinorTickVisible(false);
+//            xAxis.setLabel("Channel " + (row + 1));
 
             NumberAxis yAxis = new NumberAxis();
             yAxis.setAutoRanging(true);
@@ -113,8 +104,10 @@ public class GuiController implements Initializable
                 @Override
                 protected void dataItemAdded(Series<Number, Number> series, int itemIndex, Data<Number, Number> item) { /*empty for performance */}
             };
+            graph.setMinHeight(20);
             graph.setAnimated(false);
             graph.setTitle("Channel " + (row + 1));
+            graph.setStyle("-fx-font-size: 8px;");
 
             final AreaChart.Series<Number, Number> series = new AreaChart.Series<>();
             graph.getData().add(series);
@@ -130,8 +123,7 @@ public class GuiController implements Initializable
                 if (m_dataQ.isEmpty())
                     return;
 
-                for (int i = 0; i < 100; ++i) {
-
+                for (int i = 0; i < MAX_X_POINTS / 10; ++i) {
                     if (m_dataQ.isEmpty())
                         break;
 
@@ -144,7 +136,6 @@ public class GuiController implements Initializable
                     }
                     m_currentX++;
                 }
-
                 for (AreaChart<Number, Number> graph : charts) {
                     AreaChart.Series<Number, Number> series = graph.getData().get(0);
                     NumberAxis xAxis = (NumberAxis)graph.getXAxis();
@@ -182,6 +173,18 @@ public class GuiController implements Initializable
         m_infoText.setText(infoToShow);
     }
     /**
+     * About menu handler
+     */
+    public void onAboutPressed() {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("About me");
+        alert.setHeaderText("‘Cause you don't know me, I don't know you\n" +
+                            "So don't approach me, I won't approach you\n" +
+                            "And don't insult me, I won't insult you\n" +
+                            "‘Cause you don't know what I will or I won't do");
+        alert.show();
+    }
+    /**
      * Connect-button handler
      */
     public void onConnectPressed() {
@@ -201,6 +204,12 @@ public class GuiController implements Initializable
         else {
             m_status.setText("Setup error");
         }
+    }
+    /**
+     * Menu close handler
+     */
+    public void onClosePressed() {
+        Platform.exit();
     }
     /**
      * Menu radio check item handler
@@ -245,10 +254,13 @@ public class GuiController implements Initializable
         sendCommand(BCICommand.RESET);
     }
     private void sendCommand(char simpleCmd) {
-        BCICommand.Builder b = new BCICommand.Builder();
-        BCICommand cmd = b.addSimpleCmd(simpleCmd).build();
         if (m_listener != null) {
+            BCICommand.Builder b = new BCICommand.Builder();
+            BCICommand cmd = b.addSimpleCmd(simpleCmd).build();
             m_listener.onCommandCalled(cmd);
+        }
+        else {
+            m_status.setText("Error: mode not chosen or not connected");
         }
     }
 }

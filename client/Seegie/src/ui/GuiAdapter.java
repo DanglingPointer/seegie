@@ -66,12 +66,6 @@ public class GuiAdapter implements CmdInEndpoint, DataOutEndpoint
             }
         });
     }
-    /**
-     * Sets gain used for unit conversions for the data displayed
-     */
-    public void setGain(int gain) {
-        m_gain = gain;
-    }
     @Override
     public void addListener(CmdInEndpoint.Listener listener) {
         m_listeners.add(listener);
