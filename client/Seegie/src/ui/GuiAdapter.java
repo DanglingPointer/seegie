@@ -50,9 +50,8 @@ public class GuiAdapter implements CmdInEndpoint, DataOutEndpoint
             @Override
             public void onSeedModeSet(String comPort) {
                 try {
-                    System.out.println("Obtaining session id...");
                     String sessionId = NetworkManager.getInstance().reserveSessionId();
-                    System.out.println("Session id obtained!");
+                    sendInfo("Session id: " + sessionId + "\n");
                     EndpointFactory factory = new SeedEndpointFactory(comPort, sessionId);
                     AppManager.getInstance().setMode(factory);
                 }

@@ -116,7 +116,9 @@ public class SerialAdapter implements DataInEndpoint, CmdOutEndpoint
                 }
             }
         });
-        m_port.setBaudRate(115200);
+    }
+    public String getPortName() {
+        return m_port.getSystemPortName();
     }
     @Override
     public void sendCmd(BCICommand cmd) {
@@ -134,6 +136,7 @@ public class SerialAdapter implements DataInEndpoint, CmdOutEndpoint
     }
     @Override
     public void open() {
+        m_port.setBaudRate(115200);
         m_port.openPort();
         System.out.println("Serial port opened");
     }

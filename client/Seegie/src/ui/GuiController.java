@@ -63,8 +63,8 @@ public class GuiController implements Initializable
     private AnimationTimer m_timer;
 
 
-    private final int MAX_X_POINTS = 1000;
-    private       int m_currentX   = 0;
+    private final int  MAX_X_POINTS = 500;
+    private       long m_currentX   = 0;
 
     @FXML
     private GridPane  m_graphPane;
@@ -93,17 +93,17 @@ public class GuiController implements Initializable
         });
 
         // setting up data chart
-        NumberAxis xAxis = new NumberAxis(0, MAX_X_POINTS, MAX_X_POINTS / 100);
+        NumberAxis xAxis = new NumberAxis(0, MAX_X_POINTS, MAX_X_POINTS / 50);
         xAxis.setForceZeroInRange(false);
         xAxis.setAutoRanging(false);
         xAxis.setTickLabelsVisible(false);
         xAxis.setTickMarkVisible(false);
         xAxis.setMinorTickVisible(false);
 
-        NumberAxis yAxis = new NumberAxis(/*-1d, 1d, 0.1*/);
+        NumberAxis yAxis = new NumberAxis();
         yAxis.setAutoRanging(true);
 
-        AreaChart<Number, Number> graph = new AreaChart<Number, Number>(xAxis, yAxis)
+        final AreaChart<Number, Number> graph = new AreaChart<>(xAxis, yAxis)
         {
             @Override
             protected void dataItemAdded(Series<Number, Number> series, int itemIndex, Data<Number, Number> item) { /*empty for performance */}
@@ -111,9 +111,8 @@ public class GuiController implements Initializable
         graph.setAnimated(false);
         graph.setTitle("EEG data");
 
-        AreaChart.Series<Number, Number> series = new AreaChart.Series<Number, Number>();
+        final AreaChart.Series<Number, Number> series = new AreaChart.Series<>();
         graph.getData().add(series);
-
         m_graphPane.add(graph, 0, 0);
 
         m_timer = new AnimationTimer()
@@ -123,57 +122,24 @@ public class GuiController implements Initializable
                 if (m_dataQ.isEmpty())
                     return;
 
-                DataUnitsAdapter dataPoint = null;
                 for (int i = 0; i < 100; ++i) {
                     if (m_dataQ.isEmpty())
                         break;
-                    dataPoint = m_dataQ.remove();
-                    series.getData().add(new AreaChart.Data(/*dataPoint.getSampleNumber()*/m_currentX, dataPoint.getVoltsData()[0]));
-                    System.out.println("X: " + m_currentX + ", Y: " + dataPoint.getVoltsData()[0]);
+                    DataUnitsAdapter dataPoint = m_dataQ.remove();
+                    series.getData().add(new AreaChart.Data(/*dataPoint.getSampleNumber()*/m_currentX++, dataPoint.getVoltsData()[0]));
                 }
-                System.out.println("---Data removed from Q---");
 
                 int seriesLength = series.getData().size();
                 if (seriesLength > MAX_X_POINTS) {
                     series.getData().remove(0, seriesLength - MAX_X_POINTS);
-                    xAxis.setLowerBound((int)series.getData().get(0).getXValue());
-                    xAxis.setUpperBound(/*dataPoint.getSampleNumber()*/m_currentX);
+
+                    xAxis.setLowerBound((long)series.getData().get(0).getXValue());
+                    xAxis.setUpperBound(m_currentX - 1);
                 }
-                m_currentX++;
             }
         };
-//        startGraph(); // temp
     }
     public void startGraph() {
-//        // BEGIN TEMP
-//        ExecutorService executor = Executors.newCachedThreadPool(r -> {
-//            Thread thread = new Thread(r);
-//            thread.setDaemon(true);
-//            return thread;
-//        });
-//        executor.execute(() -> {
-//            try {
-//                int gain = Settings.getGain();
-//                for (int sample = 0; true; ++sample) {
-//
-//                    Random r = new Random();
-//                    byte[] raw = new byte[33];
-//                    r.nextBytes(raw);
-//                    raw[0] = (byte)0xA0;
-//                    raw[32] = (byte)(0xC3 & 0x000000FF);
-//                    EEGData d = new EEGData(raw);
-//                    d.sampleNum = sample;
-//
-//                    m_dataQ.add(new DataUnitsAdapter(d, gain));
-//                    Thread.sleep(2);
-//                }
-//            }
-//            catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        });
-//        // END TEMP
-
         if (m_timer != null)
             m_timer.start();
     }
@@ -183,11 +149,11 @@ public class GuiController implements Initializable
     }
     public void updateData(DataUnitsAdapter data) {
         m_dataQ.add(data);
-        System.out.println("---data added to Q ---");
     }
     public void clearData() {
         AreaChart<Number, Number> graph = (AreaChart<Number, Number>)m_graphPane.getChildren().get(0);
-        graph.getData().clear();
+        AreaChart.Series<Number, Number> series = graph.getData().get(0);
+        series.getData().clear();
         m_currentX = 0;
     }
     public void showInfo(String info) {
