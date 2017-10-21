@@ -16,24 +16,61 @@
 
 package models;
 
+import com.jsoniter.JsonIterator;
+import com.jsoniter.output.JsonStream;
+
 public final class Serializer
 {
+    private static class Datagram1
+    {
+        public Datagram1() {}
+        public Datagram1(String type, String content) {
+            this.type = type;
+            this.content = content;
+        }
+        public String type;
+        public String content;
+    }
+    private static class Datagram2
+    {
+        public Datagram2() {}
+        public Datagram2(String type, EEGData content) {
+            this.type = type;
+            this.content = content;
+        }
+        public String type;
+        public EEGData content;
+    }
+
+    public static final String TYPE_DATA = "&data&";
+    public static final String TYPE_INFO = "&info&";
+    public static final String TYPE_CMD  = "&cmd&";
+
     public static String command2Json(BCICommand cmd) {
-        throw new UnsupportedOperationException();
-    }
-    public static String data2Json(EEGData data) {
-        throw new UnsupportedOperationException();
-    }
-    public static String info2Json(String info) {
-        throw new UnsupportedOperationException();
+        Datagram1 dgram = new Datagram1(TYPE_CMD, cmd.toString());
+        return JsonStream.serialize(dgram);
     }
     public static BCICommand json2Command(String json) {
-        throw new UnsupportedOperationException();
+        Datagram1 dgram = JsonIterator.deserialize(json, Datagram1.class);
+        return dgram.type.equals(TYPE_CMD) ? new BCICommandImpl(dgram.content) : null;
     }
-    public static EEGData json2Data(String json) {
-        throw new UnsupportedOperationException();
+
+    public static String info2Json(String info) {
+        Datagram1 dgram = new Datagram1(TYPE_INFO, info);
+        return JsonStream.serialize(dgram);
     }
     public static String json2Info(String json) {
-        throw new UnsupportedOperationException();
+        Datagram1 dgram = JsonIterator.deserialize(json, Datagram1.class);
+        return dgram.type.equals(TYPE_INFO) ? dgram.content : null;
     }
+
+    public static String data2Json(EEGData data) {
+        Datagram2 dgram = new Datagram2(TYPE_DATA, data);
+        return JsonStream.serialize(dgram);
+    }
+    public static EEGData json2Data(String json) {
+        Datagram2 dgram = JsonIterator.deserialize(json, Datagram2.class);
+        return dgram.type.equals(TYPE_DATA) ? dgram.content : null;
+    }
+
 }

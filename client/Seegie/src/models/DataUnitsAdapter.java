@@ -31,13 +31,13 @@ public class DataUnitsAdapter
         double eegScaleFactor = 4.5d / gain / 8388607.0d;
         double aclScaleFactor = 0.000125d;
 
-        int[] countsData = m_data.getChannelData();
+        int[] countsData = m_data.channelData;
         for (int i = 0; i < 8; ++i) {
             m_voltsData[i] = countsData[i] * eegScaleFactor;
         }
-        m_accelerationX = m_data.getAccelerationX() * aclScaleFactor;
-        m_accelerationY = m_data.getAccelerationY() * aclScaleFactor;
-        m_accelerationZ = m_data.getAccelerationZ() * aclScaleFactor;
+        m_accelerationX = m_data.acclX * aclScaleFactor;
+        m_accelerationY = m_data.acclY * aclScaleFactor;
+        m_accelerationZ = m_data.acclZ * aclScaleFactor;
     }
     public double[] getVoltsData() {
         return Arrays.copyOf(m_voltsData, m_voltsData.length);
@@ -52,12 +52,12 @@ public class DataUnitsAdapter
         return m_accelerationZ;
     }
     public int getSampleNumber() {
-        return m_data.getSampleNumber();
+        return m_data.sampleNum;
     }
     public long getTimeStamp() {
-        return m_data.getTimeStamp();
+        return m_data.timeStamp;
     }
     public boolean getTimeStampSet() {
-        return m_data.getTimeStampSet();
+        return m_data.timeStampSet;
     }
 }

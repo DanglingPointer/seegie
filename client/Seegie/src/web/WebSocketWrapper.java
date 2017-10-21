@@ -16,8 +16,8 @@
 
 package web;
 
-import java_websocket.client.WebSocketClient;
-import java_websocket.handshake.ServerHandshake;
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
 

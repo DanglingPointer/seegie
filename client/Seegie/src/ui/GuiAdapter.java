@@ -16,10 +16,16 @@
 
 package ui;
 
+import core.AppManager;
+import core.LeechEndpointFactory;
+import core.SeedEndpointFactory;
 import io.CmdInEndpoint;
 import io.DataOutEndpoint;
+import io.EndpointFactory;
+import models.BCICommand;
 import models.DataUnitsAdapter;
 import models.EEGData;
+import web.NetworkManager;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,20 +36,35 @@ public class GuiAdapter implements CmdInEndpoint, DataOutEndpoint
     private final GuiController               m_gui;
     private       int                         m_gain;
 
-    GuiAdapter(GuiController controller, int gain) {
+    public GuiAdapter(GuiController controller, int gain) {
         m_listeners = new HashSet<>();
         m_gain = gain;
         m_gui = controller;
-        m_gui.setListener(bciCommand -> {
-            for (CmdInEndpoint.Listener l : m_listeners)
-                l.onCmdReceived(bciCommand);
+        m_gui.setListener(new GuiController.Listener()
+        {
+            @Override
+            public void onCommandCalled(BCICommand cmd) {
+                for (CmdInEndpoint.Listener l : m_listeners)
+                    l.onCmdReceived(cmd);
+            }
+            @Override
+            public void onSeedModeSet(String comPort) {
+                try {
+                    String sessionId = NetworkManager.getInstance().reserveSessionId();
+                    sendInfo("Session id: " + sessionId + "\n");
+                    EndpointFactory factory = new SeedEndpointFactory(comPort, sessionId);
+                    AppManager.getInstance().setMode(factory);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            @Override
+            public void onLeechModeSet(String sessionId) {
+                EndpointFactory factory = new LeechEndpointFactory(sessionId);
+                AppManager.getInstance().setMode(factory);
+            }
         });
-    }
-    /**
-     * Sets gain used for unit conversions for the data displayed
-     */
-    public void setGain(int gain) {
-        m_gain = gain;
     }
     @Override
     public void addListener(CmdInEndpoint.Listener listener) {
@@ -55,7 +76,7 @@ public class GuiAdapter implements CmdInEndpoint, DataOutEndpoint
     }
     @Override
     public void sendInfo(String info) {
-        m_gui.showInfo(info.trim().substring(0, info.length() - 3)); // remove final $$$
+        m_gui.showInfo(info);
     }
     @Override
     public void unregisterListeners() {
@@ -63,10 +84,11 @@ public class GuiAdapter implements CmdInEndpoint, DataOutEndpoint
     }
     @Override
     public void open() {
-
+        m_gui.clearData();
+        m_gui.startGraph();
     }
     @Override
     public void close() {
-        m_gui.clearData();
+        m_gui.stopGraph();
     }
 }

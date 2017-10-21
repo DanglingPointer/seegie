@@ -20,7 +20,7 @@ import io.CmdInEndpoint;
 import io.CmdOutEndpoint;
 import io.DataInEndpoint;
 import io.DataOutEndpoint;
-import java_websocket.handshake.ServerHandshake;
+import org.java_websocket.handshake.ServerHandshake;
 import models.BCICommand;
 import models.EEGData;
 import models.Serializer;
@@ -33,8 +33,12 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     private final WebSocketWrapper             m_socket;
     private final Set<CmdInEndpoint.Listener>  m_cmdListeners;
     private final Set<DataInEndpoint.Listener> m_dataListeners;
+    private final String                       m_id;
+    private final boolean                      m_seed;
 
-    NetworkAdapter(WebSocketWrapper ws) {
+    NetworkAdapter(WebSocketWrapper ws, String id, boolean isSeed) {
+        m_id = id;
+        m_seed = isSeed;
         m_cmdListeners = new HashSet<>();
         m_dataListeners = new HashSet<>();
         m_socket = ws;
@@ -44,15 +48,15 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
             public void onOpened(ServerHandshake handshake) {}
             @Override
             public void onMessageReceived(String message) {
-                if (message.contains("$$$")) {
+                if (message.contains(Serializer.TYPE_INFO)) {
                     for (DataInEndpoint.Listener l : m_dataListeners)
                         l.onInfoReceived(Serializer.json2Info(message));
                 }
-                else if (true) { // TODO: 01.10.2017 check that 'message' is data
+                else if (message.contains(Serializer.TYPE_DATA)) {
                     for (DataInEndpoint.Listener l : m_dataListeners)
                         l.onDataReceived(Serializer.json2Data(message));
                 }
-                else { // TODO: 01.10.2017 check that 'message' is command
+                else if (message.contains(Serializer.TYPE_CMD)) {
                     for (CmdInEndpoint.Listener l : m_cmdListeners)
                         l.onCmdReceived(Serializer.json2Command(message));
                 }
@@ -64,6 +68,12 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
             public void onErrorOccurred(Exception ex) {}
         });
     }
+    public String getId() {
+        return m_id;
+    }
+    public boolean isSeed() {
+        return m_seed;
+    }
     @Override
     public void addListener(CmdInEndpoint.Listener listener) {
         m_cmdListeners.add(listener);
@@ -71,7 +81,7 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     @Override
     public void sendCmd(BCICommand cmd) {
         String json = Serializer.command2Json(cmd);
-        // TODO: 01.10.2017 send json
+        m_socket.send(json);
     }
     @Override
     public void addListener(DataInEndpoint.Listener listener) {
@@ -80,12 +90,12 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     @Override
     public void sendData(EEGData data) {
         String json = Serializer.data2Json(data);
-        // TODO: 01.10.2017 send json
+        m_socket.send(json);
     }
     @Override
     public void sendInfo(String info) {
         String json = Serializer.info2Json(info);
-        // TODO: 01.10.2017 send json
+        m_socket.send(json);
     }
     @Override
     public void unregisterListeners() {
@@ -94,10 +104,17 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     }
     @Override
     public void open() {
-        // TODO: 29.09.2017 open socket only if not already opened
+        try {
+            if (!m_socket.isOpen())
+                m_socket.connectBlocking();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     @Override
     public void close() {
-        // TODO: 29.09.2017 close socket only if not already closed
+        if (m_socket.isOpen())
+            m_socket.close();
     }
 }
