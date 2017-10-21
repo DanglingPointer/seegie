@@ -1,28 +1,24 @@
-## Sanntidsavlesing og distribuering av OpenBCI EEG-signaler
-#### (SEEGIE – Synchronized EEG Information Exchange)
+﻿## SEEGIE – Synchronized EEG Information Exchange
 
-OpenBCI (open-source brain-computer interface) er et grensesnitt som blant annet inkluderer maskinvare for avlesning av elektriske hjernesignaler (EEG). Et spesielt designet kretskort mottar de avleste signalene. Disse kan videre sendes til en datamaskin ved å bruke seriell kommunikasjon eller bluetooth. Felles for disse kommunikasjonstypene er kort rekkevidde, noe som i praksis betyr at kun én datamaskin kan motta data samtidig, og denne datamaskinen må befinne seg like i nærheten av EEG-settet.
+#### Real-time EEG data distribution system for OpenBCI
 
-Målet med prosjektet er å lage en pålitelig og effektiv kryssplattform programvare som mottar data fra OpenBCI Cyton-kretskortet og distribuerer den mellom flere enheter i sanntid. EEG skal også kunne fjernstyres ved at systemet sørger for toveiskommunikasjon. Et brukervennlig grafisk grensesnitt for Linux og Windows inngår i systemet.
+###### Overall description
 
-#### Fremdriftsplan:
-1. Fastsettelse av krav: 
-    - ferdig; se forrige avsnitt.
-2. Overordnet programvarearkitektur: 
-    - ferdig; server (web api) + client (desktop applikasjon)
-3. Valg av teknologier (rammeverk, språk): 
-    - ferdig; ASP.Net Core og Microsoft Azure for server, JavaFX og C++ for client
-4. Detaljert programvarearkitektur: 
-    - TODO Uke 40
-5. Implementasjon
-  * server (web api for relaying data, handling multiple websockets)
-  * client (seriell port avlesing, client websocket, GUI)
-    - TODO Uke 41-44
-6. Testing: 
-    - TODO Uke 45
-7. Dokumentasjon: 
-    - TODO Uke 46
+SEEGIE is a distributed solution based on the OpenBCI platform. It allows real-time EEG data exchange and remote control of an EEG session. The system features a cross-platform client desktop application in Java with simple and user-friendly GUI, and a cloud server application written using ASP.Net Core. In addition an app targeting iOS is in progress. Below the different components are described, as well as their status as per October 2017.
 
+###### Components status
+
+- Web API: Finished with basic functionalities and deployed to Microsoft Azure. Authentication might need to be implemented in future.
+
+- Desktop client: Backend fully finished, frontend supports basic functionalities.
+
+- App: by @olavblj, in progress.
+
+###### Sessions
+
+A session consists of one "seed" (a client connected to an OpenBCI EEG set) and any number of "leeches" (remote users receiving EEG data). The desktop client implements both modes, which has to be selected by the user upon stratup. EEG data coming from the seed is distributed to all leeches in real-time. OpenBCI commands (start, stop, reset) might be sent either from any of the leeches or from the seed. The EEG data includes 8 channels and is visualized on the screen. The server allows any number of sessions which are distinguished by a session id obtained by the seed upon the first connection to the server. In order to join a session, a user has to switch her client to the leech mode and enter the session id of the appropriate session.
+
+#### OpenBCI protocols used
 
 http://docs.openbci.com/Hardware/03-Cyton_Data_Format
 
@@ -73,3 +69,7 @@ http://docs.openbci.com/OpenBCI%20Software/04-OpenBCI_Cyton_SDK
    }
 }
 ```
+
+#### License
+
+See the license file.

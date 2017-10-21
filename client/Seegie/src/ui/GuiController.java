@@ -94,7 +94,6 @@ public class GuiController implements Initializable
             xAxis.setTickLabelsVisible(false);
             xAxis.setTickMarkVisible(false);
             xAxis.setMinorTickVisible(false);
-//            xAxis.setLabel("Channel " + (row + 1));
 
             NumberAxis yAxis = new NumberAxis();
             yAxis.setAutoRanging(true);
