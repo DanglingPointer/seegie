@@ -22,10 +22,10 @@ namespace SeegieAPI.Registration
 {
     public interface IGuidService
     {
-        Guid ReserveNextId();
-        bool TryUseId(Guid id);
-        bool IsIdUsed(Guid id);
-        void FreeId(Guid id);
+        int ReserveNextId();
+        bool TryUseId(int id);
+        bool IsIdUsed(int id);
+        void FreeId(int id);
     }
 
     public class GuidService : IGuidService
@@ -38,23 +38,23 @@ namespace SeegieAPI.Registration
                 return new LifetimeCounter { Counter = count };
             }
         }
-        private readonly IDictionary<Guid, LifetimeCounter> _reservedIds;
-        private readonly ISet<Guid> _inUseIds;
+        private readonly IDictionary<int, LifetimeCounter> _reservedIds;
+        private readonly ISet<int> _inUseIds;
         private const int INITIAL_LIFETIME = 20; // max number of reserved ids at any time
 
         public GuidService()
         {
-            _reservedIds = new ConcurrentDictionary<Guid, LifetimeCounter>();
-            _inUseIds = new SortedSet<Guid>();
+            _reservedIds = new ConcurrentDictionary<int, LifetimeCounter>();
+            _inUseIds = new SortedSet<int>();
         }
-        public Guid ReserveNextId()
+        public int ReserveNextId()
         {
             // generate new id and add to reserved
-            Guid id;
+            int id;
             do {
-                id = Guid.NewGuid();
+                id = Math.Abs(Guid.NewGuid().GetHashCode()) % 100;
             } while (_reservedIds.ContainsKey(id) || _inUseIds.Contains(id));
-            _reservedIds.Add(id, INITIAL_LIFETIME);
+            _reservedIds.Add(id.GetHashCode(), INITIAL_LIFETIME);
 
             // decrement all counters and remove those getting below 0
             foreach (var tuple in _reservedIds) {
@@ -65,7 +65,7 @@ namespace SeegieAPI.Registration
             //Debug.WriteLine($"In-use ids count = {_inUseIds.Count}");
             return id;
         }
-        public bool TryUseId(Guid id)
+        public bool TryUseId(int id)
         {
             // move id from reserved to in-use
             bool reserved = _reservedIds.ContainsKey(id);
@@ -75,11 +75,11 @@ namespace SeegieAPI.Registration
             }
             return reserved;
         }
-        public bool IsIdUsed(Guid id)
+        public bool IsIdUsed(int id)
         {
             return _inUseIds.Contains(id);
         }
-        public void FreeId(Guid id)
+        public void FreeId(int id)
         {
             _inUseIds.Remove(id);
         }

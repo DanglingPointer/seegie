@@ -37,14 +37,14 @@ namespace SeegieAPI.Sessions
 
         public event Action<string> DataReceived;
         public event Action<WebSocketReceiveResult> ConnectionClosed;
-        public ClientManager(WebSocket socket, Guid sessionId, bool isSeed)
+        public ClientManager(WebSocket socket, int sessionId, bool isSeed)
         {
             _socket = socket;
             SessionId = sessionId;
             IsSeed = isSeed;
             BufferSize = 1024 * 4;
         }
-        public Guid SessionId { get; }
+        public int SessionId { get; }
         public bool IsSeed { get; }
         public uint BufferSize { get; set; }
         public async Task ListenAsync()
@@ -102,17 +102,17 @@ namespace SeegieAPI.Sessions
     }
     public class SessionManager
     {
-        private readonly IDictionary<Guid, ClientManager> _seeds;
-        private readonly IDictionary<Guid, ICollection<ClientManager>> _leeches;
-        private Action<Guid> _freeGuid;
+        private readonly IDictionary<int, ClientManager> _seeds;
+        private readonly IDictionary<int, ICollection<ClientManager>> _leeches;
+        private Action<int> _freeGuid;
 
-        public SessionManager(Action<Guid> freeGuid)
+        public SessionManager(Action<int> freeGuid)
         {
-            _seeds = new ConcurrentDictionary<Guid, ClientManager>();
-            _leeches = new ConcurrentDictionary<Guid, ICollection<ClientManager>>();
+            _seeds = new ConcurrentDictionary<int, ClientManager>();
+            _leeches = new ConcurrentDictionary<int, ICollection<ClientManager>>();
             _freeGuid = freeGuid;
         }
-        public IConnectionManager AddSeed(Guid id, WebSocket sock)
+        public IConnectionManager AddSeed(int id, WebSocket sock)
         {
             var seed = new ClientManager(sock, id, true);
             seed.ConnectionClosed += async (result) => {
@@ -121,7 +121,7 @@ namespace SeegieAPI.Sessions
             _seeds.Add(id, seed);
             return seed;
         }
-        public IConnectionManager AddLeech(Guid id, WebSocket sock)
+        public IConnectionManager AddLeech(int id, WebSocket sock)
         {
             if (!_seeds.ContainsKey(id)) {
                 throw new InvalidOperationException("Invalid session id");
@@ -150,7 +150,7 @@ namespace SeegieAPI.Sessions
             };
             return newLeech;
         }
-        public async Task CloseSessionAsync(Guid id)
+        public async Task CloseSessionAsync(int id)
         {
             if (_seeds.ContainsKey(id)) {
                 var seed = _seeds[id];

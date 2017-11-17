@@ -44,7 +44,7 @@ namespace SeegieAPI.Sessions
                     throw new Exception("Illegal number of request arguments");
 
                 string sessionId = ctx.Request.Query["sessionid"];
-                Guid id = Guid.Parse(sessionId);
+                int id = Int32.Parse(sessionId);
                 string role = ctx.Request.Query["role"];
                 
                 if (role == "leech" && _guidFactory.IsIdUsed(id)) {
