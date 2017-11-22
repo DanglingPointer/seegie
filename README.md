@@ -72,4 +72,4 @@ http://docs.openbci.com/OpenBCI%20Software/04-OpenBCI_Cyton_SDK
 
 #### License
 
-See the license file.
+GPL-3.0 for client, Apache 2.0 for webapi. See the license files.
