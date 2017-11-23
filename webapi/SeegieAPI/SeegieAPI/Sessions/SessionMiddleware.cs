@@ -62,8 +62,10 @@ namespace SeegieAPI.Sessions
                 }
             }
             catch (Exception ex) {
-                if (!ctx.Response.HasStarted)
+                if (!ctx.Response.HasStarted) {
+                    //await ctx.Response.WriteAsync(ex.ToString());
                     ctx.Response.StatusCode = 400;
+                }
                 Debug.WriteLine(ex.ToString());
             }
         }

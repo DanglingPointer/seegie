@@ -31,7 +31,7 @@ namespace SeegieAPI.Sessions
         Task ListenAsync();
         Task CloseConnectionAsync();
     }
-    public class ClientManager : IConnectionManager
+    public class ClientManager : IConnectionManager, IDisposable
     {
         private readonly WebSocket _socket;
 
@@ -49,40 +49,35 @@ namespace SeegieAPI.Sessions
         public uint BufferSize { get; set; }
         public async Task ListenAsync()
         {
-            //string who = (IsSeed ? "Seed" : "Leech");
-            //Debug.WriteLine(who + " started listening");
+            try {
+                byte[] buffer = new byte[BufferSize];
+                while (_socket.State == WebSocketState.Open) {
+                    WebSocketReceiveResult result =
+                        await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
 
-            byte[] buffer = new byte[BufferSize];
-            while (_socket.State == WebSocketState.Open) {
-                WebSocketReceiveResult result =
-                    await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                
-                //Debug.WriteLine(who + " received a message");
-                if (result.MessageType == WebSocketMessageType.Text) {
-                    string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    DataReceived?.Invoke(message);
+                    if (result.MessageType == WebSocketMessageType.Text) {
+                        string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                        DataReceived?.Invoke(message);
+                    }
+                    else if (result.MessageType == WebSocketMessageType.Close) {
+                        ConnectionClosed?.Invoke(result);
+                    }
                 }
-                else if (result.MessageType == WebSocketMessageType.Close) {
-                    //Debug.WriteLine(who + " received a closing message");
-                    ConnectionClosed?.Invoke(result);
-                }
+            }
+            catch (Exception) {
+                _socket.Abort();
+                ConnectionClosed?.Invoke(null);
             }
         }
         public async Task CloseConnectionAsync()
         {
             if (_socket.State != WebSocketState.Closed)
                 await _socket.CloseAsync(WebSocketCloseStatus.EndpointUnavailable, "No data available", CancellationToken.None);
-
-            //string who = (IsSeed ? "Seed" : "Leech");
-            //Debug.WriteLine(who + " closed connection");
         }
         public async Task SendMessageAsync(String text)
         {
             if (_socket.State != WebSocketState.Open)
                 return;
-
-            //string who = (IsSeed ? "Seed" : "Leech");
-            //Debug.WriteLine(who + " is about to send a message");
 
             byte[] arr = Encoding.UTF8.GetBytes(text);
             var buffer = new ArraySegment<byte>(
@@ -97,7 +92,12 @@ namespace SeegieAPI.Sessions
                 endOfMessage: true,
                 cancellationToken: CancellationToken.None
                 );            
-            //Debug.WriteLine(who + " has sent a message");
+        }
+        public void Dispose()
+        {
+            if (_socket.State != WebSocketState.Aborted && _socket.State != WebSocketState.Closed)
+                _socket.Abort();
+            _socket.Dispose();
         }
     }
     public class SessionManager
@@ -135,7 +135,12 @@ namespace SeegieAPI.Sessions
             var seed = _seeds[id];
 
             Action<string> onEegDataReceivedHandler = async (eegData) => {
-                await newLeech.SendMessageAsync(eegData);
+                try {
+                    await newLeech.SendMessageAsync(eegData);
+                }
+                catch (Exception) {
+                    await newLeech.CloseConnectionAsync();
+                }
             };
             seed.DataReceived += onEegDataReceivedHandler;
 
@@ -144,6 +149,7 @@ namespace SeegieAPI.Sessions
                 seed.DataReceived -= onEegDataReceivedHandler;
                 if (_leeches.ContainsKey(id))
                     _leeches[id].Remove(newLeech);
+                newLeech.Dispose();
             };
             newLeech.DataReceived += async (bciCmd) => {
                 await seed.SendMessageAsync(bciCmd);
@@ -156,12 +162,15 @@ namespace SeegieAPI.Sessions
                 var seed = _seeds[id];
                 _seeds.Remove(id);
                 await seed.CloseConnectionAsync();
+                seed.Dispose();
             }
             if (_leeches.ContainsKey(id)) {
                 var list = _leeches[id];
                 _leeches.Remove(id);
-                foreach(var leech in list)
-                    await leech.CloseConnectionAsync();                
+                foreach (var leech in list) {
+                    await leech.CloseConnectionAsync();
+                    leech.Dispose();
+                }
             }
             _freeGuid(id);
         }

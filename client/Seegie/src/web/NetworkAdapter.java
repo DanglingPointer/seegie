@@ -90,13 +90,25 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     }
     @Override
     public void sendData(EEGData data) {
-        String json = Serializer.data2Json(data);
-        m_socket.send(json);
+        try {
+            String json = Serializer.data2Json(data);
+            m_socket.send(json);
+        }
+        catch (Exception e) {
+            System.out.println("Exception using websocket");
+            e.printStackTrace();
+        }
     }
     @Override
     public void sendInfo(String info) {
-        String json = Serializer.info2Json(info);
-        m_socket.send(json);
+        try {
+            String json = Serializer.info2Json(info);
+            m_socket.send(json);
+        }
+        catch (Exception e) {
+            System.out.println("Exception using websocket");
+            e.printStackTrace();
+        }
     }
     @Override
     public void unregisterListeners() {
