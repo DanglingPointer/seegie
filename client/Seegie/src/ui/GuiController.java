@@ -99,7 +99,7 @@ public class GuiController implements Initializable
             NumberAxis yAxis = new NumberAxis();
             yAxis.setAutoRanging(true);
 
-            final AreaChart<Number, Number> graph = new AreaChart<>(xAxis, yAxis)
+            final AreaChart<Number, Number> graph = new AreaChart<Number, Number>(xAxis, yAxis)
             {
                 @Override
                 protected void dataItemAdded(Series<Number, Number> series, int itemIndex, Data<Number, Number> item) { /*empty for performance */}
