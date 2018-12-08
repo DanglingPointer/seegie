@@ -1,5 +1,5 @@
 /*
- *     Copyright (C) 2017  Mikhail Vasilyev
+ *     Copyright (C) 2017-2018  Mikhail Vasilyev
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ public final class Settings
 {
     private static final String PROP_WS_URL  = "websocketUrl";
     private static final String PROP_API_URL = "apiUrl";
+    private static final String PROP_UDP_URL = "udpUrl";
     private static final String PROP_GAIN    = "gain";
 
     private static final Properties s_props = new Properties();
@@ -44,6 +45,7 @@ public final class Settings
             // create config if none found
             s_props.setProperty(PROP_WS_URL, "ws://seegieapi.azurewebsites.net?");
             s_props.setProperty(PROP_API_URL, "http://seegieapi.azurewebsites.net/");
+            s_props.setProperty(PROP_UDP_URL, "udp://seegieapi.azurewebsites.net:15010");
             s_props.setProperty(PROP_GAIN, "24");
             try {
                 String path = NetworkManager.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath() + "config.txt";
@@ -58,6 +60,9 @@ public final class Settings
     }
     public static String getApiUrl() {
         return s_props.getProperty(PROP_API_URL);
+    }
+    public static String getUdpUrl() {
+        return s_props.getProperty(PROP_UDP_URL);
     }
     public static int getGain() {
         String gain = s_props.getProperty(PROP_GAIN);

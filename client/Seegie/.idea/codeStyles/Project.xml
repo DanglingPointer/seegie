@@ -1,0 +1,49 @@
+<component name="ProjectCodeStyleConfiguration">
+  <code_scheme name="Project" version="173">
+    <option name="FIELD_NAME_PREFIX" value="m_" />
+    <option name="STATIC_FIELD_NAME_PREFIX" value="s_" />
+    <option name="VISIBILITY" value="private" />
+    <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="10" />
+    <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="5" />
+    <option name="JD_ADD_BLANK_AFTER_DESCRIPTION" value="false" />
+    <option name="WRAP_COMMENTS" value="true" />
+    <JavaCodeStyleSettings>
+      <option name="FIELD_NAME_PREFIX" value="m_" />
+      <option name="STATIC_FIELD_NAME_PREFIX" value="s_" />
+      <option name="VISIBILITY" value="private" />
+      <option name="ALIGN_MULTILINE_ANNOTATION_PARAMETERS" value="true" />
+      <option name="BLANK_LINES_AROUND_INITIALIZER" value="0" />
+      <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="10" />
+      <option name="NAMES_COUNT_TO_USE_IMPORT_ON_DEMAND" value="5" />
+      <option name="JD_ADD_BLANK_AFTER_DESCRIPTION" value="false" />
+    </JavaCodeStyleSettings>
+    <codeStyleSettings language="JAVA">
+      <option name="BLANK_LINES_AROUND_CLASS" value="0" />
+      <option name="BLANK_LINES_AROUND_METHOD" value="0" />
+      <option name="BLANK_LINES_AROUND_METHOD_IN_INTERFACE" value="0" />
+      <option name="CLASS_BRACE_STYLE" value="2" />
+      <option name="ELSE_ON_NEW_LINE" value="true" />
+      <option name="CATCH_ON_NEW_LINE" value="true" />
+      <option name="FINALLY_ON_NEW_LINE" value="true" />
+      <option name="CASE_STATEMENT_ON_NEW_LINE" value="false" />
+      <option name="ALIGN_MULTILINE_CHAINED_METHODS" value="true" />
+      <option name="ALIGN_MULTILINE_PARAMETERS_IN_CALLS" value="true" />
+      <option name="ALIGN_MULTILINE_BINARY_OPERATION" value="true" />
+      <option name="ALIGN_MULTILINE_ASSIGNMENT" value="true" />
+      <option name="ALIGN_MULTILINE_TERNARY_OPERATION" value="true" />
+      <option name="ALIGN_MULTILINE_THROWS_LIST" value="true" />
+      <option name="ALIGN_MULTILINE_EXTENDS_LIST" value="true" />
+      <option name="ALIGN_MULTILINE_ARRAY_INITIALIZER_EXPRESSION" value="true" />
+      <option name="ALIGN_GROUP_FIELD_DECLARATIONS" value="true" />
+      <option name="SPACE_WITHIN_BRACES" value="true" />
+      <option name="SPACE_WITHIN_ARRAY_INITIALIZER_BRACES" value="true" />
+      <option name="SPACE_AFTER_TYPE_CAST" value="false" />
+      <option name="EXTENDS_KEYWORD_WRAP" value="1" />
+      <option name="KEEP_SIMPLE_BLOCKS_IN_ONE_LINE" value="true" />
+      <option name="KEEP_SIMPLE_METHODS_IN_ONE_LINE" value="true" />
+      <option name="KEEP_SIMPLE_LAMBDAS_IN_ONE_LINE" value="true" />
+      <option name="KEEP_MULTIPLE_EXPRESSIONS_IN_ONE_LINE" value="true" />
+      <option name="WRAP_COMMENTS" value="true" />
+    </codeStyleSettings>
+  </code_scheme>
+</component>

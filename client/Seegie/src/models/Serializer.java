@@ -1,5 +1,5 @@
 /*
- *     Copyright (C) 2017  Mikhail Vasilyev
+ *     Copyright (C) 2017-2018  Mikhail Vasilyev
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -35,17 +35,31 @@ public final class Serializer
     private static class Datagram2
     {
         public Datagram2() {}
-        public Datagram2(String type, EEGData content) {
+        public Datagram2(String type, String sessionId, EEGData content) {
             this.type = type;
+            this.sessionId = sessionId;
             this.content = content;
         }
         public String type;
+        public String sessionId;
         public EEGData content;
+    }
+    private static class Datagram3
+    {
+        public Datagram3(String type, String sessionId, int recvPort) {
+            this.type = type;
+            this.sessionId = sessionId;
+            this.recvPort = recvPort;
+        }
+        public String type;
+        public String sessionId;
+        public int recvPort;
     }
 
     public static final String TYPE_DATA = "&data&";
     public static final String TYPE_INFO = "&info&";
     public static final String TYPE_CMD  = "&cmd&";
+    public static final String TYPE_INVITE = "&invite&";
 
     public static String command2Json(BCICommand cmd) {
         Datagram1 dgram = new Datagram1(TYPE_CMD, cmd.toString());
@@ -65,8 +79,8 @@ public final class Serializer
         return dgram.type.equals(TYPE_INFO) ? dgram.content : null;
     }
 
-    public static String data2Json(EEGData data) {
-        Datagram2 dgram = new Datagram2(TYPE_DATA, data);
+    public static String data2Json(String sessionId, EEGData data) {
+        Datagram2 dgram = new Datagram2(TYPE_DATA, sessionId, data);
         return JsonStream.serialize(dgram);
     }
     public static EEGData json2Data(String json) {
@@ -74,4 +88,8 @@ public final class Serializer
         return dgram.type.equals(TYPE_DATA) ? dgram.content : null;
     }
 
+    public static String invite2Json(String sessionId, int localPort) {
+        Datagram3 dgram = new Datagram3(TYPE_INVITE, sessionId, localPort);
+        return JsonStream.serialize(dgram);
+    }
 }

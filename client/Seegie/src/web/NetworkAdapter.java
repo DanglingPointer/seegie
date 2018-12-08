@@ -1,5 +1,5 @@
 /*
- *     Copyright (C) 2017  Mikhail Vasilyev
+ *     Copyright (C) 2017-2018  Mikhail Vasilyev
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -31,42 +31,62 @@ import java.util.Set;
 
 public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEndpoint, CmdOutEndpoint
 {
-    private final WebSocketWrapper             m_socket;
+    private final WebSocketWrapper             m_wsSocket;
+    private final UdpClient                    m_udpSocket;
     private final Set<CmdInEndpoint.Listener>  m_cmdListeners;
     private final Set<DataInEndpoint.Listener> m_dataListeners;
     private final String                       m_id;
     private final boolean                      m_seed;
 
-    NetworkAdapter(WebSocketWrapper ws, String id, boolean isSeed) {
+    NetworkAdapter(WebSocketWrapper ws, UdpClient udp, String id, boolean isSeed) {
         m_id = id;
         m_seed = isSeed;
         m_cmdListeners = new HashSet<>();
         m_dataListeners = new HashSet<>();
-        m_socket = ws;
-        m_socket.setListener(new WebSocketWrapper.Listener()
+        m_wsSocket = ws;
+        m_wsSocket.setListener(new WebSocketWrapper.Listener()
         {
             @Override
             public void onOpened(ServerHandshake handshake) {}
             @Override
             public void onMessageReceived(String message) {
                 if (message.contains(Serializer.TYPE_INFO)) {
+                    String info = Serializer.json2Info(message);
                     for (DataInEndpoint.Listener l : m_dataListeners)
-                        l.onInfoReceived(Serializer.json2Info(message));
-                }
-                else if (message.contains(Serializer.TYPE_DATA)) {
-                    for (DataInEndpoint.Listener l : m_dataListeners)
-                        l.onDataReceived(Serializer.json2Data(message));
+                        l.onInfoReceived(info);
                 }
                 else if (message.contains(Serializer.TYPE_CMD)) {
+                    BCICommand cmd = Serializer.json2Command(message);
                     for (CmdInEndpoint.Listener l : m_cmdListeners)
-                        l.onCmdReceived(Serializer.json2Command(message));
+                        l.onCmdReceived(cmd);
                 }
-
             }
             @Override
             public void onClosed(int code, String reason, boolean remote) {}
             @Override
-            public void onErrorOccurred(Exception ex) {}
+            public void onErrorOccurred(Exception e) {
+                System.out.println("Exception using websocket");
+                e.printStackTrace();
+            }
+        });
+        m_udpSocket = udp;
+        m_udpSocket.setListener(new UdpClient.Listener()
+        {
+            @Override
+            public void onReceived(String message) {
+                if (message.contains(Serializer.TYPE_DATA)) {
+                    EEGData data = Serializer.json2Data(message);
+                    for (DataInEndpoint.Listener l : m_dataListeners)
+                        l.onDataReceived(data);
+                }
+            }
+            @Override
+            public void onStopped() {}
+            @Override
+            public void onError(Exception e) {
+                System.out.println("Exception using udp");
+                e.printStackTrace();
+            }
         });
     }
     public String getId() {
@@ -81,8 +101,13 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     }
     @Override
     public void sendCmd(BCICommand cmd) {
-        String json = Serializer.command2Json(cmd);
-        m_socket.send(json);
+        try {
+            String json = Serializer.command2Json(cmd);
+            m_wsSocket.send(json);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     @Override
     public void addListener(DataInEndpoint.Listener listener) {
@@ -91,11 +116,10 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     @Override
     public void sendData(EEGData data) {
         try {
-            String json = Serializer.data2Json(data);
-            m_socket.send(json);
+            String json = Serializer.data2Json(m_id, data);
+            m_udpSocket.send(json);
         }
         catch (Exception e) {
-            System.out.println("Exception using websocket");
             e.printStackTrace();
         }
     }
@@ -103,10 +127,9 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     public void sendInfo(String info) {
         try {
             String json = Serializer.info2Json(info);
-            m_socket.send(json);
+            m_wsSocket.send(json);
         }
         catch (Exception e) {
-            System.out.println("Exception using websocket");
             e.printStackTrace();
         }
     }
@@ -118,8 +141,13 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     @Override
     public void open() {
         try {
-            if (!m_socket.isOpen())
-                m_socket.connectBlocking();
+            if (!m_seed && !m_udpSocket.isListening()) {
+                final String invite = Serializer.invite2Json(m_id, m_udpSocket.getLocalPort());
+                m_udpSocket.send(invite); // try to punch a hole?
+                m_udpSocket.startListening();
+            }
+            if (!m_wsSocket.isOpen() && !m_wsSocket.isClosed())
+                m_wsSocket.connectBlocking();
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -127,7 +155,7 @@ public class NetworkAdapter implements DataInEndpoint, DataOutEndpoint, CmdInEnd
     }
     @Override
     public void close() {
-        if (m_socket.isOpen())
-            m_socket.close();
+        m_wsSocket.close();
+        m_udpSocket.close();
     }
 }

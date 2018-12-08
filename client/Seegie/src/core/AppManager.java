@@ -1,5 +1,5 @@
 /*
- *     Copyright (C) 2017  Mikhail Vasilyev
+ *     Copyright (C) 2017-2018  Mikhail Vasilyev
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -269,7 +269,8 @@ final class Tests
         System.out.println("Timestamp set = " + dd.timeStampSet);
 
 
-        String jsonData = Serializer.data2Json(dd);
+        String sessionId = "42";
+        String jsonData = Serializer.data2Json(sessionId, dd);
         System.out.println(jsonData);
 
         EEGData d = Serializer.json2Data(jsonData);

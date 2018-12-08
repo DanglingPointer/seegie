@@ -1,5 +1,5 @@
 /*
- *     Copyright (C) 2017  Mikhail Vasilyev
+ *     Copyright (C) 2017-2018  Mikhail Vasilyev
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -36,20 +36,25 @@ public class NetworkManager
 
     private final String         m_wsLink;
     private final String         m_httpLink;
+    private final String         m_udpLink;
     private       NetworkAdapter m_currentAdapter;
 
     private NetworkManager() {
         m_wsLink = Settings.getWsUrl();
         m_httpLink = Settings.getApiUrl();
+        m_udpLink = Settings.getUdpUrl();
         m_currentAdapter = null;
     }
-    public NetworkAdapter getAdapter(String id, boolean isSeed) throws URISyntaxException {
+    public NetworkAdapter getAdapter(String id, boolean isSeed) throws URISyntaxException,
+                                                                       IOException {
         if (m_currentAdapter == null
             || !m_currentAdapter.getId().equals(id)
             || m_currentAdapter.isSeed() != isSeed) {
             String link = m_wsLink + "role=" + (isSeed ? "seed" : "leech") + "&sessionid=" + id;
-            WebSocketWrapper socket = new WebSocketWrapper(new URI(link));
-            m_currentAdapter = new NetworkAdapter(socket, id, isSeed);
+            WebSocketWrapper ws = new WebSocketWrapper(new URI(link));
+            UdpClient udp = new UdpClient(new URI(m_udpLink));
+
+            m_currentAdapter = new NetworkAdapter(ws, udp, id, isSeed);
         }
         return m_currentAdapter;
     }
