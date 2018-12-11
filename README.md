@@ -1,4 +1,12 @@
 ﻿## SEEGIE – Synchronized EEG Information Exchange
+ 
+ 
+#### TODO (December 2018):
+* playout according to timestamp/sequence number
+* udp-based protocol for transmitting data (instead of websockets), possibly with nack
+* server: udp
+* encryption
+* authentication?
 
 #### Real-time EEG data distribution system for OpenBCI
 
